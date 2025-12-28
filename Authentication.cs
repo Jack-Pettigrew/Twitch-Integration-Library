@@ -3,6 +3,7 @@ using System.Text.Json;
 using TIL.DataContainers;
 using TIL.Exceptions;
 using TIL.Network.Responses;
+using TIL.Serialization;
 
 namespace TIL.Auth;
 
@@ -53,7 +54,7 @@ static class Authentication
             Scopes = tokenSuccess.scopes ?? Array.Empty<string>()
         };
 
-        SaveDeviceToken(twitchDeviceToken);
+        DeviceTokenSerializer.SaveDeviceToken(twitchDeviceToken);
 
         Cleanup();
 
@@ -110,23 +111,6 @@ static class Authentication
                     throw new InvalidOperationException($"Device Flow polling failed: {(int)pollingResponse.StatusCode} {pollingResponse.ReasonPhrase}. Response: {content}");
             }
         }
-    }
-
-    private static void SaveDeviceToken(TwitchDeviceToken twitchDeviceToken)
-    {
-        string appDataLocalDirPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        string appDir = Path.Combine(appDataLocalDirPath, "TwitchIntegrationLibrary");
-
-        Directory.CreateDirectory(appDir);
-
-        string fileDir = Path.Combine(appDir, "twitch_device_token.json");
-
-        string deviceTokenJson = JsonSerializer.Serialize(twitchDeviceToken, new JsonSerializerOptions
-        {
-            WriteIndented = true
-        });
-
-        File.WriteAllText(fileDir, deviceTokenJson);
     }
 
     private static void Cleanup()
