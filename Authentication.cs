@@ -11,15 +11,35 @@ static class Authentication
 {
     private static HttpClient? httpClient = null;
 
-    public static async Task<string> GetDeviceAccessTokenAsync(string clientId, params string[] scopes)
+    public static async Task<TwitchDeviceToken> GetDeviceAccessTokenAsync(string clientId, params string[] scopes)
     {
-        // TODO find if we have access token stored
+        Console.WriteLine("Beginning Retrieving Device Token...");
 
-        // TODO if we have one, check its valid
+        Console.WriteLine("Searching for saved Device Token...");
+        TwitchDeviceToken? twitchDeviceToken = DeviceTokenSerializer.LoadDeviceToken();
 
-        // TODO if its not, use refresh token
+        // Attempt to validate and refresh device token
+        if (twitchDeviceToken != null)
+        {
+            Console.WriteLine("Checking saved Device Token...");
+
+            // Valid Check
+            if (DateTime.UtcNow > twitchDeviceToken.ExpiresAtUtc && twitchDeviceToken.RefreshToken != string.Empty)
+            {
+                Console.WriteLine("Device Token Expired. Attempting to refresh...");
 
         // TODO if we don't, request new via auth flow
+            }
+            else
+            {
+                Console.WriteLine("Saved Device Token is valid.");
+                return twitchDeviceToken;
+            }
+        }
+        else
+        {
+            Console.WriteLine("No saved Device Token found.");
+        }
 
         httpClient = new HttpClient();
 
@@ -29,10 +49,13 @@ static class Authentication
             ["scopes"] = string.Join(' ', scopes)
         });
 
+        Console.WriteLine("Requesting new Device Flow Auth...");
+
         using HttpResponseMessage response = await httpClient.PostAsync(new Uri("https://id.twitch.tv/oauth2/device"), postData);
 
         string responseJson = await response.Content.ReadAsStringAsync();
 
+        // TODO handle exceptions
         response.EnsureSuccessStatusCode();
 
         DeviceCodeRequestResponse deviceResponse = JsonSerializer.Deserialize<DeviceCodeRequestResponse>(responseJson)!;
@@ -43,10 +66,12 @@ static class Authentication
         browserProcess.StartInfo.FileName = deviceResponse.verification_uri;
         browserProcess.Start();
 
+        Console.WriteLine("Polling device code for user completion...");
+
         // TODO handle exceptions
         TokenSuccess tokenSuccess = await PollDeviceCodeFlowAsync(clientId, deviceResponse, CancellationToken.None);
 
-        TwitchDeviceToken twitchDeviceToken = new TwitchDeviceToken
+        twitchDeviceToken = new TwitchDeviceToken
         {
             AccessToken = tokenSuccess.access_token,
             RefreshToken = tokenSuccess.refresh_token,
@@ -58,7 +83,7 @@ static class Authentication
 
         Cleanup();
 
-        return "";
+        return twitchDeviceToken;
     }
 
     private static async Task<TokenSuccess> PollDeviceCodeFlowAsync(string clientId, DeviceCodeRequestResponse deviceCodeResponse, CancellationToken cancellationToken)
@@ -103,7 +128,7 @@ static class Authentication
 
             switch (tokenFailed.message)
             {
-                case "authorisation_pending":
+                case "authorization_pending":
                     await Task.Delay(deviceCodeResponse.interval, cancellationToken);
                     break;
 
