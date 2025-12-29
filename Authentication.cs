@@ -28,7 +28,17 @@ static class Authentication
             {
                 Console.WriteLine("Device Token Expired. Attempting to refresh...");
 
-        // TODO if we don't, request new via auth flow
+                // Refresh Token
+                try
+                {
+                    twitchDeviceToken = await RefreshDeviceToken(clientId, twitchDeviceToken.RefreshToken);
+                    return twitchDeviceToken;
+                }
+                catch (Exception e)
+                {
+                    // Let it go into to device auth flow
+                    Console.WriteLine(e.Message);
+                }
             }
             else
             {
@@ -136,6 +146,47 @@ static class Authentication
                     throw new InvalidOperationException($"Device Flow polling failed: {(int)pollingResponse.StatusCode} {pollingResponse.ReasonPhrase}. Response: {content}");
             }
         }
+    }
+
+    private static async Task<TwitchDeviceToken> RefreshDeviceToken(string clientId, string refreshToken)
+    {
+        FormUrlEncodedContent postData = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["client_id"] = clientId,
+            ["grant_type"] = "refresh_token",
+            ["refresh_token"] = refreshToken
+        });
+
+        using HttpResponseMessage refreshResponse = await httpClient.PostAsync(new Uri("https://id.twitch.tv/oauth2/token"), postData);
+        string content = await refreshResponse.Content.ReadAsStringAsync();
+
+        Console.WriteLine(content);
+
+        if (refreshResponse.IsSuccessStatusCode)
+        {
+            TokenSuccess tokenSuccess = JsonSerializer.Deserialize<TokenSuccess>(content);
+
+            if (tokenSuccess?.access_token is null)
+            {
+                throw new InvalidAccessTokenException("Device Flow Response is missing access_token.");
+            }
+
+            TwitchDeviceToken twitchDeviceToken = new TwitchDeviceToken
+            {
+                AccessToken = tokenSuccess.access_token,
+                RefreshToken = tokenSuccess.refresh_token,
+                ExpiresAtUtc = DateTime.UtcNow.AddSeconds(tokenSuccess.expires_in),
+                Scopes = tokenSuccess.scopes ?? Array.Empty<string>()
+            };
+
+            DeviceTokenSerializer.SaveDeviceToken(twitchDeviceToken);
+
+            return twitchDeviceToken;
+        }
+
+        TokenFailed tokenFailed = JsonSerializer.Deserialize<TokenFailed>(content);
+
+        throw new InvalidOperationException($"Device Flow polling failed: {(int)refreshResponse.StatusCode} {refreshResponse.ReasonPhrase}. Response: {content}");
     }
 
     private static void Cleanup()
