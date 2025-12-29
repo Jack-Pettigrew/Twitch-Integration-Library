@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using TIL.DataContainers;
 
@@ -20,5 +21,20 @@ static class DeviceTokenSerializer
         });
 
         File.WriteAllText(fileDir, deviceTokenJson);
+    }
+
+    public static TwitchDeviceToken? LoadDeviceToken()
+    {
+        string appDataLocalDirPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string appDir = Path.Combine(appDataLocalDirPath, "TwitchIntegrationLibrary");
+
+        if (!Directory.Exists(appDir))
+        {
+            return null;
+        }
+
+        string fileDir = Path.Combine(appDir, "twitch_device_token.json");
+
+        return JsonSerializer.Deserialize<TwitchDeviceToken>(File.ReadAllText(fileDir, Encoding.UTF8));
     }
 }
