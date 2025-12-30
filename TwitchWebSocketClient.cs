@@ -8,12 +8,14 @@ class TwitchWebSocketClient : IDisposable
 {
     private const string WEBSOCKET_ENDPOINT = "wss://eventsub.wss.twitch.tv/ws";
 
-    public string? sessionId { get; private set; } = null;
+    private TwitchSessionContext twitchSessionContext;
     private ClientWebSocket websocket;
     private ArraySegment<byte> websocketResponseBuffer = new ArraySegment<byte>(new byte[1024]);
 
-    public TwitchWebSocketClient()
+    public TwitchWebSocketClient(TwitchSessionContext twitchSessionContext)
     {
+        this.twitchSessionContext = twitchSessionContext;
+
         websocket = new ClientWebSocket();
     }
 
@@ -30,7 +32,7 @@ class TwitchWebSocketClient : IDisposable
 
         JsonNode responseNode = JsonNode.Parse(Encoding.UTF8.GetString(websocketResponseBuffer.Array!, 0, result.Count))!;
 
-        sessionId = responseNode!["payload"]!["session"]!["id"]?.ToString();
+        twitchSessionContext.session_id = responseNode!["payload"]!["session"]!["id"]?.ToString();
 
         return true;
     }

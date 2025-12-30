@@ -14,10 +14,8 @@ class TwitchClient : IDisposable
     // REGULATION
     public bool IsConnectedToTwitch { get; private set; } = false;
 
-    // CLIENT DETAILS
-    public readonly string? clientId = null;
-    public int? userId { get; private set; } = null;
-    public TwitchDeviceToken? twitchDeviceToken { get; private set; } = null;
+    // CONTEXT
+    public TwitchSessionContext TwitchSessionContext { get; private set; }
 
     // INTENTS
     public string[] scopes = Array.Empty<string>();
@@ -29,31 +27,27 @@ class TwitchClient : IDisposable
     // CANCELLATION TOKEN
     private CancellationTokenSource cancellationTokenSource;
 
-    public TwitchClient(string clientId, int userId)
+    public TwitchClient(string clientId, string userId, string[] scopes)
     {
-        this.httpClient = new HttpClient();
-        this.cancellationTokenSource = new CancellationTokenSource();
-        this.clientId = clientId;
-        this.userId = userId;
-    }
+        httpClient = new HttpClient();
+        cancellationTokenSource = new CancellationTokenSource();
 
-    public TwitchClient(string clientId, int userId, string[] scopes)
-    {
-        this.httpClient = new HttpClient();
-        this.cancellationTokenSource = new CancellationTokenSource();
-        this.clientId = clientId;
-        this.userId = userId;
-        this.scopes = scopes;
+        TwitchSessionContext = new TwitchSessionContext
+        {
+            client_id = clientId,
+            user_id = userId,
+            scopes = scopes,
+        };
     }
 
     public async Task<bool> ConnectToTwitchAsync()
     {
-        twitchDeviceToken = await Authentication.GetDeviceAccessTokenAsync(clientId, scopes);
+        TwitchSessionContext.twitch_device_token = await Authentication.GetDeviceAccessTokenAsync(TwitchSessionContext);
 
-        Console.WriteLine($"Completed: Final access token - {twitchDeviceToken}");
+        Console.WriteLine($"Completed: Final access token - {TwitchSessionContext.twitch_device_token}");
         Console.ReadKey();
 
-        twitchWebSocketClient = new TwitchWebSocketClient();
+        twitchWebSocketClient = new TwitchWebSocketClient(TwitchSessionContext);
 
         if (!await twitchWebSocketClient.ConnectToTwitchAsync(cancellationTokenSource.Token))
         {

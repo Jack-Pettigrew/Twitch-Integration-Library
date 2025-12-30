@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using TIL.Client;
 using TIL.DataContainers;
 using TIL.Exceptions;
 using TIL.Network.Responses;
@@ -11,7 +12,7 @@ static class Authentication
 {
     private static HttpClient? httpClient = null;
 
-    public static async Task<TwitchDeviceToken> GetDeviceAccessTokenAsync(string clientId, params string[] scopes)
+    public static async Task<TwitchDeviceToken> GetDeviceAccessTokenAsync(TwitchSessionContext twitchSessionContext)
     {
         Console.WriteLine("Beginning Retrieving Device Token...");
 
@@ -31,7 +32,7 @@ static class Authentication
                 // Refresh Token
                 try
                 {
-                    twitchDeviceToken = await RefreshDeviceToken(clientId, twitchDeviceToken.RefreshToken);
+                    twitchDeviceToken = await RefreshDeviceToken(twitchSessionContext.client_id, twitchDeviceToken.RefreshToken);
                     return twitchDeviceToken;
                 }
                 catch (Exception e)
@@ -55,8 +56,8 @@ static class Authentication
 
         FormUrlEncodedContent postData = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            ["client_id"] = clientId,
-            ["scopes"] = string.Join(' ', scopes)
+            ["client_id"] = twitchSessionContext.client_id,
+            ["scopes"] = string.Join(' ', twitchSessionContext.scopes)
         });
 
         Console.WriteLine("Requesting new Device Flow Auth...");
@@ -79,7 +80,7 @@ static class Authentication
         Console.WriteLine("Polling device code for user completion...");
 
         // TODO handle exceptions
-        TokenSuccess tokenSuccess = await PollDeviceCodeFlowAsync(clientId, deviceResponse, CancellationToken.None);
+        TokenSuccess tokenSuccess = await PollDeviceCodeFlowAsync(twitchSessionContext.client_id, deviceResponse, CancellationToken.None);
 
         twitchDeviceToken = new TwitchDeviceToken
         {
