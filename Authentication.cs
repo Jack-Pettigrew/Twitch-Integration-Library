@@ -44,6 +44,7 @@ static class Authentication
             else
             {
                 Console.WriteLine("Saved Device Token is valid.");
+                Console.WriteLine($"Using device token: {twitchDeviceToken}");
                 return twitchDeviceToken;
             }
         }
@@ -57,7 +58,7 @@ static class Authentication
         FormUrlEncodedContent postData = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["client_id"] = twitchSessionContext.client_id,
-            ["scopes"] = string.Join(' ', twitchSessionContext.scopes)
+            ["scopes"] = string.Join(" ", twitchSessionContext.scopes.Select(e => e.GetScope()))
         });
 
         Console.WriteLine("Requesting new Device Flow Auth...");
