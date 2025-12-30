@@ -57,6 +57,31 @@ class TwitchClient : IDisposable
         return true;
     }
 
+    public async Task SubscribeToEventSubAsync(IEventSub[] eventSubs)
+    {
+        Console.WriteLine("Subbing to EventSubs...");
+
+        foreach (var eventsub in eventSubs)
+        {
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TwitchSessionContext.twitch_device_token.AccessToken);
+            httpClient.DefaultRequestHeaders.Add("Client-Id", TwitchSessionContext.client_id);
+
+            byte[] payload = JsonSerializer.SerializeToUtf8Bytes(eventsub.ToSubscriptionPayload(TwitchSessionContext));
+
+            using StringContent httpContentJson = new StringContent(Encoding.UTF8.GetString(payload), Encoding.UTF8, "application/json");
+
+            using HttpResponseMessage subscriptionResult = await httpClient.PostAsync(new Uri("https://api.twitch.tv/helix/eventsub/subscriptions"), httpContentJson, cancellationTokenSource.Token);
+            string subscriptionResponse = await subscriptionResult.Content.ReadAsStringAsync(cancellationTokenSource.Token);
+
+            // JsonNode subscriptionNode = JsonNode.Parse(subscriptionResponse)!;
+
+            // TODO handle subscription response
+
+            Console.WriteLine(subscriptionResponse);
+        }
+
+        Console.WriteLine("Finished Subbing to EventSubs.");
+    }
     public void Dispose()
     {
         twitchWebSocketClient?.Dispose();
