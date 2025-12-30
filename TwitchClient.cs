@@ -29,15 +29,16 @@ class TwitchClient : IDisposable
 
     public TwitchClient(string clientId, string userId, string[] scopes)
     {
-        httpClient = new HttpClient();
-        cancellationTokenSource = new CancellationTokenSource();
-
         TwitchSessionContext = new TwitchSessionContext
         {
             client_id = clientId,
             user_id = userId,
             scopes = scopes,
         };
+
+        httpClient = new HttpClient();
+        twitchWebSocketClient = new TwitchWebSocketClient(TwitchSessionContext);
+        cancellationTokenSource = new CancellationTokenSource();
     }
 
     public async Task<bool> ConnectToTwitchAsync()
@@ -46,8 +47,6 @@ class TwitchClient : IDisposable
 
         Console.WriteLine($"Completed: Final access token - {TwitchSessionContext.twitch_device_token}");
         Console.ReadKey();
-
-        twitchWebSocketClient = new TwitchWebSocketClient(TwitchSessionContext);
 
         if (!await twitchWebSocketClient.ConnectToTwitchAsync(cancellationTokenSource.Token))
         {
