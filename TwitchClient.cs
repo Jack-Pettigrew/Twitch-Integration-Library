@@ -1,15 +1,12 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using TIL.Auth;
-using TIL.DataContainers;
-using TIL.TwitchAPI;
 using TIL.TwitchAPI.EventSubs;
 
 namespace TIL.Client;
 
-class TwitchClient : IDisposable
+sealed class TwitchClient : IDisposable
 {
     // REGULATION
     public bool IsConnectedToTwitch { get; private set; } = false;
@@ -27,7 +24,7 @@ class TwitchClient : IDisposable
     // CANCELLATION TOKEN
     private CancellationTokenSource cancellationTokenSource;
 
-    public TwitchClient(string clientId, string userId, string[] scopes)
+    public TwitchClient(string clientId, string userId, IEventSub[] scopes)
     {
         TwitchSessionContext = new TwitchSessionContext
         {
@@ -36,25 +33,31 @@ class TwitchClient : IDisposable
             scopes = scopes,
         };
 
-        httpClient = new HttpClient();
-        twitchWebSocketClient = new TwitchWebSocketClient(TwitchSessionContext);
         cancellationTokenSource = new CancellationTokenSource();
+
+        httpClient = new HttpClient();
+        twitchWebSocketClient = new TwitchWebSocketClient(30, TwitchSessionContext, cancellationTokenSource.Token);
     }
 
     public async Task<bool> ConnectToTwitchAsync()
     {
         TwitchSessionContext.twitch_device_token = await Authentication.GetDeviceAccessTokenAsync(TwitchSessionContext);
 
-        Console.WriteLine($"Completed: Final access token - {TwitchSessionContext.twitch_device_token}");
-        Console.ReadKey();
+        Console.WriteLine($"Retrieved Device Token - {TwitchSessionContext.twitch_device_token}");
 
-        if (!await twitchWebSocketClient.ConnectToTwitchAsync(cancellationTokenSource.Token))
+        if (!await twitchWebSocketClient.ConnectToTwitchAsync())
         {
             return false;
         }
 
+        await SubscribeToEventSubAsync(TwitchSessionContext.scopes);
 
         return true;
+    }
+
+    public async Task DisconnectFromTwitchAsync()
+    {
+        await StopWebsocketListeningAsync();
     }
 
     public async Task SubscribeToEventSubAsync(IEventSub[] eventSubs)
@@ -82,9 +85,25 @@ class TwitchClient : IDisposable
 
         Console.WriteLine("Finished Subbing to EventSubs.");
     }
+
+    public void StartWebsocketListening()
+    {
+        if (cancellationTokenSource.TryReset())
+        {
+            _ = twitchWebSocketClient.StartHandlingWebsocket();
+        }
+    }
+
+    public async Task StopWebsocketListeningAsync()
+    {
+        await cancellationTokenSource.CancelAsync();
+        await twitchWebSocketClient.DisconnectFromTwitchAsync();
+    }
+
     public void Dispose()
     {
         twitchWebSocketClient?.Dispose();
         httpClient?.Dispose();
+        cancellationTokenSource?.Dispose();
     }
 }
