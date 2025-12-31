@@ -1,6 +1,7 @@
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json.Nodes;
+using TIL.TwitchAPI;
 
 namespace TIL.Client;
 
@@ -91,8 +92,7 @@ class TwitchWebSocketClient : IDisposable
                     switch (responseNode["metadata"]!["message_type"]!.ToString())
                     {
                         case "notification":
-                            Console.WriteLine("This is where we'd handle the event!");
-                            Console.WriteLine(response);
+                            TwitchNotificationProcessor.ProcessTwitchEvent(responseNode);
                             break;
 
                         case "session_keepalive":
@@ -134,6 +134,9 @@ class TwitchWebSocketClient : IDisposable
         catch (Exception e)
         {
             Console.WriteLine($"TwitchWebSocketClient experienced an error: {e.Message}");
+
+            // Print stacktrace manually as we lose it in async outside main sync context
+            Console.WriteLine($"{e.StackTrace}");
         }
     }
 
