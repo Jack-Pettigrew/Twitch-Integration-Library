@@ -1,11 +1,8 @@
 namespace TIL.Exceptions;
 
-public class InvalidDeviceCodeException : System.Exception
+public class InvalidDeviceCodeException : Exception
 {
     public InvalidDeviceCodeException() { }
     public InvalidDeviceCodeException(string message) : base(message) { }
-    public InvalidDeviceCodeException(string message, System.Exception inner) : base(message, inner) { }
-    protected InvalidDeviceCodeException(
-        System.Runtime.Serialization.SerializationInfo info,
-        System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    public InvalidDeviceCodeException(string message, Exception inner) : base(message, inner) { }
 }
