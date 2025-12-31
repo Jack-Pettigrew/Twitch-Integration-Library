@@ -7,8 +7,6 @@ public static class TwitchEventNotificationProcessor
 {
     public static void ProcessTwitchEvent(JsonNode twitchResponseJson)
     {
-        Console.WriteLine(twitchResponseJson.ToString());
-
         switch (twitchResponseJson["payload"]!["subscription"]!["type"]!.ToString())
         {
             case "channel.chat.message":
