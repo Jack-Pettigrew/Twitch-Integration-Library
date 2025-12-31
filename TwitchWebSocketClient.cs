@@ -69,7 +69,18 @@ class TwitchWebSocketClient : IDisposable
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                WebSocketReceiveResult responseResult = await websocket.ReceiveAsync(websocketResponseBuffer, cancellationToken);
+                WebSocketReceiveResult responseResult;
+
+                try
+                {
+                    responseResult = await websocket.ReceiveAsync(websocketResponseBuffer, cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"There was an issue receiving the next Socket Response: {e.Message}.");
+                    Console.WriteLine("Skipping...");
+                    continue;
+                }
 
                 if (responseResult.MessageType != WebSocketMessageType.Close)
                 {
@@ -119,11 +130,6 @@ class TwitchWebSocketClient : IDisposable
                     await DisconnectFromTwitchAsync();
                 }
             }
-        }
-        catch (OperationCanceledException e)
-        {
-            // TODO gracefully handle this
-            return;
         }
         catch (Exception e)
         {
