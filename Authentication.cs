@@ -10,7 +10,12 @@ namespace TIL.Auth;
 
 static class Authentication
 {
-    private static HttpClient? httpClient = null;
+    private static HttpClient httpClient;
+
+    static Authentication()
+    {
+        httpClient = new HttpClient();
+    }
 
     public static async Task<TwitchDeviceToken> GetDeviceAccessTokenAsync(TwitchSessionContext twitchSessionContext)
     {
@@ -20,19 +25,19 @@ static class Authentication
         TwitchDeviceToken? twitchDeviceToken = DeviceTokenSerializer.LoadDeviceToken();
 
         // Attempt to validate and refresh device token
-        if (twitchDeviceToken != null)
+        if (twitchDeviceToken is not null)
         {
             Console.WriteLine("Checking saved Device Token...");
 
             // Valid Check
-            if (DateTime.UtcNow > twitchDeviceToken.ExpiresAtUtc && twitchDeviceToken.RefreshToken != string.Empty)
+            if (DateTime.UtcNow >= twitchDeviceToken.ExpiresAtUtc && twitchDeviceToken.RefreshToken != string.Empty)
             {
                 Console.WriteLine("Device Token Expired. Attempting to refresh...");
 
                 // Refresh Token
                 try
                 {
-                    twitchDeviceToken = await RefreshDeviceToken(twitchSessionContext.client_id, twitchDeviceToken.RefreshToken);
+                    twitchDeviceToken = await RefreshDeviceToken(twitchSessionContext.client_id!, twitchDeviceToken.RefreshToken);
                     return twitchDeviceToken;
                 }
                 catch (Exception e)
@@ -57,8 +62,8 @@ static class Authentication
 
         FormUrlEncodedContent postData = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            ["client_id"] = twitchSessionContext.client_id,
-            ["scopes"] = string.Join(" ", twitchSessionContext.scopes.Select(e => e.GetScope()))
+            ["client_id"] = twitchSessionContext.client_id!,
+            ["scopes"] = string.Join(" ", twitchSessionContext.scopes!.Select(e => e.GetScope()))
         });
 
         Console.WriteLine("Requesting new Device Flow Auth...");
@@ -81,13 +86,30 @@ static class Authentication
         Console.WriteLine("Polling device code for user completion...");
 
         // TODO handle exceptions
-        TokenSuccess tokenSuccess = await PollDeviceCodeFlowAsync(twitchSessionContext.client_id, deviceResponse, CancellationToken.None);
+        TokenSuccess tokenSuccess = await PollDeviceCodeFlowAsync(twitchSessionContext.client_id!, deviceResponse, CancellationToken.None);
+
+        if (tokenSuccess is null)
+        {
+            throw new FailedToDeserializeTokenException("");
+        }
+
+        DateTime tokenExpiry = DateTime.UtcNow.AddSeconds(tokenSuccess.expires_in);
+
+        if (tokenSuccess.access_token is null)
+        {
+            throw new InvalidAccessTokenException("Device Flow Response is missing access_token.");
+        }
+
+        if (tokenSuccess.refresh_token is null)
+        {
+            Console.WriteLine($"Refresh successful but refresh token was not provided. User will need to reauth at: {tokenExpiry}");
+        }
 
         twitchDeviceToken = new TwitchDeviceToken
         {
             AccessToken = tokenSuccess.access_token,
-            RefreshToken = tokenSuccess.refresh_token,
-            ExpiresAtUtc = DateTime.UtcNow.AddSeconds(tokenSuccess.expires_in),
+            RefreshToken = tokenSuccess.refresh_token ?? "",
+            ExpiresAtUtc = tokenExpiry,
             Scopes = tokenSuccess.scopes ?? Array.Empty<string>()
         };
 
@@ -100,6 +122,11 @@ static class Authentication
 
     private static async Task<TokenSuccess> PollDeviceCodeFlowAsync(string clientId, DeviceCodeRequestResponse deviceCodeResponse, CancellationToken cancellationToken)
     {
+        if (deviceCodeResponse.device_code is null)
+        {
+            throw new ArgumentNullException("Device Code Response contains a null device_code.");
+        }
+
         DateTime startedPollingAt = DateTime.UtcNow;
 
         while (true)
@@ -125,9 +152,14 @@ static class Authentication
             // Handle successful response
             if (pollingResponse.IsSuccessStatusCode)
             {
-                TokenSuccess authToken = JsonSerializer.Deserialize<TokenSuccess>(content);
+                TokenSuccess? authToken = JsonSerializer.Deserialize<TokenSuccess>(content);
 
-                if (authToken?.access_token is null)
+                if (authToken is null)
+                {
+                    throw new FailedToDeserializeTokenException("Unable to deserialize device code polling success response");
+                }
+
+                if (authToken.access_token is null)
                 {
                     throw new InvalidAccessTokenException("Device Flow Response is missing access_token.");
                 }
@@ -136,7 +168,12 @@ static class Authentication
             }
 
             // Handle failed response
-            TokenFailed tokenFailed = JsonSerializer.Deserialize<TokenFailed>(content);
+            TokenFailed? tokenFailed = JsonSerializer.Deserialize<TokenFailed>(content);
+
+            if (tokenFailed is null)
+            {
+                throw new FailedToDeserializeTokenException("Unable to deserialize device code polling failure response.");
+            }
 
             switch (tokenFailed.message)
             {
@@ -155,6 +192,7 @@ static class Authentication
         FormUrlEncodedContent postData = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["client_id"] = clientId,
+            ["client_secret"] = Env.CLIENT_SECRET,
             ["grant_type"] = "refresh_token",
             ["refresh_token"] = refreshToken
         });
@@ -162,22 +200,34 @@ static class Authentication
         using HttpResponseMessage refreshResponse = await httpClient.PostAsync(new Uri("https://id.twitch.tv/oauth2/token"), postData);
         string content = await refreshResponse.Content.ReadAsStringAsync();
 
-        Console.WriteLine(content);
-
         if (refreshResponse.IsSuccessStatusCode)
         {
-            TokenSuccess tokenSuccess = JsonSerializer.Deserialize<TokenSuccess>(content);
+            Console.WriteLine("Refreshed Token Successfully");
 
-            if (tokenSuccess?.access_token is null)
+            TokenSuccess? tokenSuccess = JsonSerializer.Deserialize<TokenSuccess>(content);
+
+            if (tokenSuccess is null)
+            {
+                throw new FailedToDeserializeTokenException("");
+            }
+
+            DateTime tokenExpiry = DateTime.UtcNow.AddSeconds(tokenSuccess.expires_in);
+
+            if (tokenSuccess.access_token is null)
             {
                 throw new InvalidAccessTokenException("Device Flow Response is missing access_token.");
+            }
+
+            if (tokenSuccess.refresh_token is null)
+            {
+                Console.WriteLine($"Refresh successful but refresh token was not provided. User will need to reauth at: {tokenExpiry}");
             }
 
             TwitchDeviceToken twitchDeviceToken = new TwitchDeviceToken
             {
                 AccessToken = tokenSuccess.access_token,
-                RefreshToken = tokenSuccess.refresh_token,
-                ExpiresAtUtc = DateTime.UtcNow.AddSeconds(tokenSuccess.expires_in),
+                RefreshToken = tokenSuccess.refresh_token ?? "",
+                ExpiresAtUtc = tokenExpiry,
                 Scopes = tokenSuccess.scopes ?? Array.Empty<string>()
             };
 
@@ -186,9 +236,14 @@ static class Authentication
             return twitchDeviceToken;
         }
 
-        TokenFailed tokenFailed = JsonSerializer.Deserialize<TokenFailed>(content);
+        TokenFailed? tokenFailed = JsonSerializer.Deserialize<TokenFailed>(content)!;
 
-        throw new InvalidOperationException($"Device Flow polling failed: {(int)refreshResponse.StatusCode} {refreshResponse.ReasonPhrase}. Response: {content}");
+        if (tokenFailed is null)
+        {
+            throw new FailedToDeserializeTokenException("");
+        }
+
+        throw new InvalidOperationException($"Device Flow polling failed: {(int)refreshResponse.StatusCode} {refreshResponse.ReasonPhrase}. Response: {tokenFailed.message}");
     }
 
     private static void Cleanup()
