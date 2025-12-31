@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using TIL.Auth;
+using TIL.Exceptions;
 using TIL.TwitchAPI.EventSubs;
 
 namespace TIL.Client;
@@ -50,7 +51,7 @@ sealed class TwitchClient : IDisposable
             return false;
         }
 
-        await SubscribeToEventSubAsync(TwitchSessionContext.scopes);
+        await SubscribeToEventSubAsync(TwitchSessionContext.scopes!);
 
         return true;
     }
@@ -63,6 +64,11 @@ sealed class TwitchClient : IDisposable
     public async Task SubscribeToEventSubAsync(IEventSub[] eventSubs)
     {
         Console.WriteLine("Subbing to EventSubs...");
+
+        if (TwitchSessionContext.twitch_device_token is null)
+        {
+            throw new InvalidDeviceCodeException("Unable to subscribe to EventSubs due to null device_token.");
+        }
 
         foreach (var eventsub in eventSubs)
         {
