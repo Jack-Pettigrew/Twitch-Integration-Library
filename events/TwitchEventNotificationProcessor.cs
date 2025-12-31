@@ -3,7 +3,7 @@ using TIL.Events;
 
 namespace TIL.TwitchAPI;
 
-public static class TwitchNotificationProcessor
+public static class TwitchEventNotificationProcessor
 {
     public static void ProcessTwitchEvent(JsonNode twitchResponseJson)
     {

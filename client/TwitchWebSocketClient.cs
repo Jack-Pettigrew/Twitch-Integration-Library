@@ -92,7 +92,7 @@ class TwitchWebSocketClient : IDisposable
                     switch (responseNode["metadata"]!["message_type"]!.ToString())
                     {
                         case "notification":
-                            TwitchNotificationProcessor.ProcessTwitchEvent(responseNode);
+                            TwitchEventNotificationProcessor.ProcessTwitchEvent(responseNode);
                             break;
 
                         case "session_keepalive":
