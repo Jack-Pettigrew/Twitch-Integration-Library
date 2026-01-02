@@ -1,6 +1,9 @@
+using System;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json.Nodes;
+using System.Threading;
+using System.Threading.Tasks;
 using TIL.TwitchAPI;
 
 namespace TIL.Client;

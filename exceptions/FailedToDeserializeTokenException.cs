@@ -1,4 +1,4 @@
-public class FailedToDeserializeTokenException : Exception
+public class FailedToDeserializeTokenException : System.Exception
 {
     public FailedToDeserializeTokenException() { }
     public FailedToDeserializeTokenException(string message) : base(message) { }

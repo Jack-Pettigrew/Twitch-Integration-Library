@@ -1,3 +1,5 @@
+using System;
+
 namespace TIL.DataContainers;
 
 public record TwitchDeviceToken

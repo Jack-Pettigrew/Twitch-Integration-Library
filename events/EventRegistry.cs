@@ -1,3 +1,5 @@
+using System;
+
 namespace TIL.Events;
 
 public static class EventRegistry
