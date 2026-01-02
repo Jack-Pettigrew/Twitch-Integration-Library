@@ -18,6 +18,10 @@ class TwitchWebSocketClient : IDisposable
     private ClientWebSocket websocket;
     private ArraySegment<byte> websocketResponseBuffer = new ArraySegment<byte>(new byte[1024 * 2]);
 
+    // EVENTS
+    public delegate void WebsocketClientEventHandler(TwitchWebSocketClient twitchWebSocketClient);
+    public static event WebsocketClientEventHandler? OnWebsocketExperiencedException;
+
     public TwitchWebSocketClient(TwitchSessionContext twitchSessionContext, CancellationToken cancellationToken)
     {
         this.twitchSessionContext = twitchSessionContext;
@@ -134,12 +138,18 @@ class TwitchWebSocketClient : IDisposable
                 }
             }
         }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine($"TwitchWebSocketClient was requested to stop via a CancellationToken.");
+        }
         catch (Exception e)
         {
             Console.WriteLine($"TwitchWebSocketClient experienced an error: {e.Message}");
 
             // Print stacktrace manually as we lose it in async outside main sync context
             Console.WriteLine($"{e.StackTrace}");
+
+            OnWebsocketExperiencedException?.Invoke(this);
         }
     }
 
@@ -170,7 +180,6 @@ class TwitchWebSocketClient : IDisposable
         }
 
         Console.WriteLine(errorMessage);
-
     }
 
     public void Dispose()
