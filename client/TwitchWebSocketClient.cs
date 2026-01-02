@@ -83,7 +83,7 @@ class TwitchWebSocketClient : IDisposable
                 {
                     responseResult = await websocket.ReceiveAsync(websocketResponseBuffer, cancellationToken);
                 }
-                catch (OperationCanceledException e)
+                catch (OperationCanceledException)
                 {
                     throw;
                 }
