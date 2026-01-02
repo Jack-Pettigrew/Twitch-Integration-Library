@@ -25,11 +25,11 @@ sealed class TwitchClient : IDisposable
     // NETWORKING
     private HttpClient httpClient;
     private TwitchWebSocketClient twitchWebSocketClient;
+    public bool AutoReconnectWebsocketOnFailure { get; private set; } = false;
 
     // CANCELLATION TOKEN
     private CancellationTokenSource cancellationTokenSource;
 
-    public TwitchClient(string clientId, string userId, IEventSub[] scopes)
     /// <summary>
     /// 
     /// </summary>
@@ -37,6 +37,7 @@ sealed class TwitchClient : IDisposable
     /// <param name="userId"></param>
     /// <param name="scopes"></param>
     /// <param name="ReconnectWebsocketOnFailure"></param>
+    public TwitchClient(string clientId, string userId, IEventSub[] scopes, bool autoReconnectWebsocketOnFailure = false)
     {
         TwitchSessionContext = new TwitchSessionContext
         {
@@ -49,6 +50,16 @@ sealed class TwitchClient : IDisposable
 
         httpClient = new HttpClient();
         twitchWebSocketClient = new TwitchWebSocketClient(30, TwitchSessionContext, cancellationTokenSource.Token);
+
+        SetAutoconnectWebsocketOnFailure(autoReconnectWebsocketOnFailure);
+    }
+
+    ~TwitchClient()
+    {
+        if (AutoReconnectWebsocketOnFailure)
+        {
+            TwitchWebSocketClient.OnWebsocketExperiencedException -= HandleTwitchWebSocketClientException;
+        }
     }
 
     public async Task<bool> ConnectToTwitchAsync()
@@ -120,6 +131,29 @@ sealed class TwitchClient : IDisposable
     {
         await cancellationTokenSource.CancelAsync();
         await twitchWebSocketClient.DisconnectFromTwitchAsync();
+    }
+
+    public void SetAutoconnectWebsocketOnFailure(bool toggle)
+    {
+        if (toggle == AutoReconnectWebsocketOnFailure) return;
+
+        AutoReconnectWebsocketOnFailure = toggle;
+
+        if (AutoReconnectWebsocketOnFailure)
+        {
+            TwitchWebSocketClient.OnWebsocketExperiencedException += HandleTwitchWebSocketClientException;
+        }
+        else
+        {
+            TwitchWebSocketClient.OnWebsocketExperiencedException -= HandleTwitchWebSocketClientException;
+        }
+    }
+
+    private void HandleTwitchWebSocketClientException(TwitchWebSocketClient twitchWebSocketClient)
+    {
+        Console.WriteLine("TwitchWebSocketClient threw exception - attempting to reconnect...");
+
+        _ = twitchWebSocketClient.StartHandlingWebsocket();
     }
 
     public void Dispose()
