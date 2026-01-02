@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TIL.Auth;
 using TIL.Exceptions;
+using TIL.TwitchAPI;
 using TIL.TwitchAPI.EventSubs;
 
 namespace TIL.Client;
@@ -97,12 +98,12 @@ sealed class TwitchClient : IDisposable
             throw new InvalidDeviceCodeException("Unable to subscribe to EventSubs due to null device_token.");
         }
 
-        foreach (var eventsub in eventSubs)
+        foreach (var eventSub in eventSubs)
         {
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TwitchSessionContext.twitch_device_token.AccessToken);
             httpClient.DefaultRequestHeaders.Add("Client-Id", TwitchSessionContext.client_id);
 
-            byte[] payload = JsonSerializer.SerializeToUtf8Bytes(eventsub.ToSubscriptionPayload(TwitchSessionContext));
+            byte[] payload = JsonSerializer.SerializeToUtf8Bytes(eventSub.ToSubscriptionPayload(TwitchSessionContext));
 
             using StringContent httpContentJson = new StringContent(Encoding.UTF8.GetString(payload), Encoding.UTF8, "application/json");
 
@@ -112,6 +113,9 @@ sealed class TwitchClient : IDisposable
             // JsonNode subscriptionNode = JsonNode.Parse(subscriptionResponse)!;
 
             // TODO handle subscription response
+
+            // Add to registry
+            TwitchEventNotificationProcessor.RegisterTwitchEventHandler(eventSub);
 
             Console.WriteLine(subscriptionResponse);
         }
