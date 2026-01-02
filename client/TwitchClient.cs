@@ -30,6 +30,13 @@ sealed class TwitchClient : IDisposable
     private CancellationTokenSource cancellationTokenSource;
 
     public TwitchClient(string clientId, string userId, IEventSub[] scopes)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="clientId"></param>
+    /// <param name="userId"></param>
+    /// <param name="scopes"></param>
+    /// <param name="ReconnectWebsocketOnFailure"></param>
     {
         TwitchSessionContext = new TwitchSessionContext
         {
@@ -65,6 +72,11 @@ sealed class TwitchClient : IDisposable
         await StopWebsocketListeningAsync();
     }
 
+    /// <summary>
+    /// Subscribes Client to the requested EventSubs.
+    /// </summary>
+    /// <param name="eventSubs">Array of Twitch EventSubs for the Client to subscribe to.</param>
+    /// <exception cref="InvalidDeviceCodeException"=></exception>
     public async Task SubscribeToEventSubAsync(IEventSub[] eventSubs)
     {
         Console.WriteLine("Subbing to EventSubs...");

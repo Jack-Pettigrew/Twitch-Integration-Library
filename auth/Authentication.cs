@@ -23,6 +23,14 @@ static class Authentication
         httpClient = new HttpClient();
     }
 
+    /// <summary>
+    /// Requests Device Access Token from Twitch or attempts to use locally saved token.
+    /// </summary>
+    /// <param name="twitchSessionContext">Current Session Context</param>
+    /// <returns>A working Device Token.</returns>
+    /// <exception cref="FailedToDeserializeTokenException"></exception>
+    /// <exception cref="InvalidAccessTokenException"></exception>
+    /// <exception cref="HttpRequestException"></exception>
     public static async Task<TwitchDeviceToken> GetDeviceAccessTokenAsync(TwitchSessionContext twitchSessionContext)
     {
         Console.WriteLine("Beginning Retrieving Device Token...");
@@ -40,9 +48,9 @@ static class Authentication
             {
                 Console.WriteLine("Device Token Expired. Attempting to refresh...");
 
-                // Refresh Token
                 try
                 {
+                    // Refresh Token
                     twitchDeviceToken = await RefreshDeviceToken(twitchSessionContext.client_id!, twitchDeviceToken.RefreshToken);
                     return twitchDeviceToken;
                 }
@@ -78,7 +86,7 @@ static class Authentication
 
         string responseJson = await response.Content.ReadAsStringAsync();
 
-        // TODO handle exceptions
+        // Guard no success - exception exit early
         response.EnsureSuccessStatusCode();
 
         DeviceCodeRequestResponse deviceResponse = JsonSerializer.Deserialize<DeviceCodeRequestResponse>(responseJson)!;
@@ -126,6 +134,9 @@ static class Authentication
         return twitchDeviceToken;
     }
 
+    /// <exception cref="FailedToDeserializeTokenException"></exception>
+    /// <exception cref="InvalidAccessTokenException"></exception>
+    /// <exception cref="InvalidOperationException">Device Token Polling failed.</exception>
     private static async Task<TokenSuccess> PollDeviceCodeFlowAsync(string clientId, DeviceCodeRequestResponse deviceCodeResponse, CancellationToken cancellationToken)
     {
         if (deviceCodeResponse.device_code is null)
@@ -193,6 +204,9 @@ static class Authentication
         }
     }
 
+    /// <exception cref="FailedToDeserializeTokenException"></exception>
+    /// <exception cref="InvalidAccessTokenException"></exception>
+    /// <exception cref="InvalidOperationException">Device Token Polling failed.</exception>
     private static async Task<TwitchDeviceToken> RefreshDeviceToken(string clientId, string refreshToken)
     {
         FormUrlEncodedContent postData = new FormUrlEncodedContent(new Dictionary<string, string>
