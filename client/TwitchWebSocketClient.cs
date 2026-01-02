@@ -83,6 +83,10 @@ class TwitchWebSocketClient : IDisposable
                 {
                     responseResult = await websocket.ReceiveAsync(websocketResponseBuffer, cancellationToken);
                 }
+                catch (OperationCanceledException e)
+                {
+                    throw;
+                }
                 catch (Exception e)
                 {
                     Console.WriteLine($"There was an issue receiving the next Socket Response: {e.Message}.");
