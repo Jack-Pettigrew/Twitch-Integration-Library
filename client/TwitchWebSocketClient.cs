@@ -11,8 +11,8 @@ namespace TIL.Client;
 class TwitchWebSocketClient : IDisposable
 {
     private const string WEBSOCKET_ENDPOINT = "wss://eventsub.wss.twitch.tv/ws";
-    private readonly int? keepalive_timeout = null;
-    private CancellationToken cancellationToken;
+    private readonly int? keepAliveTimeout = null;
+    private CancellationTokenSource websocketCancellationTokenSource;
 
     private TwitchSessionContext twitchSessionContext;
     private ClientWebSocket websocket;
@@ -22,36 +22,34 @@ class TwitchWebSocketClient : IDisposable
     public delegate void WebsocketClientEventHandler(TwitchWebSocketClient twitchWebSocketClient);
     public static event WebsocketClientEventHandler? OnWebsocketExperiencedException;
 
-    public TwitchWebSocketClient(TwitchSessionContext twitchSessionContext, CancellationToken cancellationToken)
+    public TwitchWebSocketClient(TwitchSessionContext twitchSessionContext)
     {
         this.twitchSessionContext = twitchSessionContext;
-        this.cancellationToken = cancellationToken;
-
-        websocket = new ClientWebSocket();
     }
 
-    public TwitchWebSocketClient(int keepalive_timeout_seconds, TwitchSessionContext twitchSessionContext, CancellationToken cancellationToken)
+    public TwitchWebSocketClient(int keepalive_timeout_seconds, TwitchSessionContext twitchSessionContext)
     {
         this.twitchSessionContext = twitchSessionContext;
-        this.cancellationToken = cancellationToken;
-        keepalive_timeout = keepalive_timeout_seconds;
-
-        websocket = new ClientWebSocket();
+        keepAliveTimeout = keepalive_timeout_seconds;
     }
 
 
     public async Task<bool> ConnectToTwitchAsync()
     {
-        string websocket_endpoint_complete = keepalive_timeout != null ? WEBSOCKET_ENDPOINT + $"?keepalive_timeout_seconds={keepalive_timeout}" : WEBSOCKET_ENDPOINT;
+        websocket = new ClientWebSocket();
 
-        await websocket.ConnectAsync(new Uri(websocket_endpoint_complete), cancellationToken);
+        websocketCancellationTokenSource = new CancellationTokenSource();
+
+        string websocket_endpoint_complete = keepAliveTimeout != null ? WEBSOCKET_ENDPOINT + $"?keepalive_timeout_seconds={keepAliveTimeout}" : WEBSOCKET_ENDPOINT;
+
+        await websocket.ConnectAsync(new Uri(websocket_endpoint_complete), websocketCancellationTokenSource.Token);
 
         if (websocket.State != WebSocketState.Open)
         {
             return false;
         }
 
-        WebSocketReceiveResult result = await websocket.ReceiveAsync(websocketResponseBuffer, cancellationToken);
+        WebSocketReceiveResult result = await websocket.ReceiveAsync(websocketResponseBuffer, websocketCancellationTokenSource.Token);
 
         JsonNode responseNode = JsonNode.Parse(Encoding.UTF8.GetString(websocketResponseBuffer.Array!, 0, result.Count))!;
 
@@ -62,10 +60,9 @@ class TwitchWebSocketClient : IDisposable
 
     public async Task DisconnectFromTwitchAsync()
     {
-        if (websocket.State == WebSocketState.Open || websocket.State == WebSocketState.CloseReceived)
+        if (websocket.State == WebSocketState.Open || websocket.State == WebSocketState.Connecting)
         {
-            await websocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Completed websocket connection.", CancellationToken.None);
-            // await websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Completed websocket connection.", CancellationToken.None);
+            await websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Completed websocket connection.", CancellationToken.None);
         }
     }
 
@@ -75,13 +72,13 @@ class TwitchWebSocketClient : IDisposable
         {
             while (true)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                websocketCancellationTokenSource.Token.ThrowIfCancellationRequested();
 
                 WebSocketReceiveResult responseResult;
 
                 try
                 {
-                    responseResult = await websocket.ReceiveAsync(websocketResponseBuffer, cancellationToken);
+                    responseResult = await websocket.ReceiveAsync(websocketResponseBuffer, websocketCancellationTokenSource.Token);
                 }
                 catch (OperationCanceledException)
                 {
@@ -139,12 +136,14 @@ class TwitchWebSocketClient : IDisposable
                 else
                 {
                     await DisconnectFromTwitchAsync();
+                    break;
                 }
+
             }
         }
         catch (OperationCanceledException)
         {
-            Console.WriteLine($"TwitchWebSocketClient was requested to stop via a CancellationToken.");
+            Console.WriteLine($"TwitchWebSocketClient was requested to stop via a websocketCancellationTokenSource.");
         }
         catch (Exception e)
         {
