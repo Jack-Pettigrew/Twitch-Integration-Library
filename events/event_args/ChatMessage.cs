@@ -1,3 +1,5 @@
+using System;
+
 namespace TIL.Events;
 
 public class ChatMessage : EventArgs

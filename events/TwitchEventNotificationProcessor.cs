@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using TIL.Events;
 using TIL.TwitchAPI.EventSubs;
@@ -7,6 +8,7 @@ namespace TIL.TwitchAPI;
 
 public static class TwitchEventNotificationProcessor
 {
+    // <type, eventsub>
     private static Dictionary<string, IEventSub> processorDictionary = new Dictionary<string, IEventSub>();
 
     public static void RegisterTwitchEventHandler(IEventSub eventSub)
@@ -26,6 +28,11 @@ public static class TwitchEventNotificationProcessor
 
             throw new UnableToRegisterEventSubHandlerException($"{message} {eventSub.GetSubscriptionType()}");
         }
+    }
+
+    public static void ClearEventHandlers()
+    {
+        processorDictionary.Clear();
     }
 
     public static void ProcessTwitchEvent(JsonNode twitchResponseJson)
