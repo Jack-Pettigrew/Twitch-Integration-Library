@@ -75,14 +75,23 @@ class TwitchWebSocketClient : IDisposable
                 websocketCancellationTokenSource.Token.ThrowIfCancellationRequested();
 
                 WebSocketReceiveResult responseResult;
+                string response = "";
 
                 try
                 {
-                    responseResult = await websocket.ReceiveAsync(websocketResponseBuffer, websocketCancellationTokenSource.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
+                    do
+                    {
+                        responseResult = await websocket.ReceiveAsync(websocketResponseBuffer, websocketCancellationTokenSource.Token);
+
+                        if (responseResult.MessageType == WebSocketMessageType.Close)
+                        {
+                            await DisconnectFromTwitchAsync();
+                            return;
+                        }
+
+                        response += Encoding.UTF8.GetString(websocketResponseBuffer.Array!, 0, responseResult.Count);
+
+                    } while (!responseResult.EndOfMessage);
                 }
                 catch (Exception e)
                 {
@@ -91,54 +100,43 @@ class TwitchWebSocketClient : IDisposable
                     continue;
                 }
 
-                if (responseResult.MessageType != WebSocketMessageType.Close)
+                JsonNode responseNode = JsonNode.Parse(response)!;
+
+                switch (responseNode["metadata"]!["message_type"]!.ToString())
                 {
-                    string response = Encoding.UTF8.GetString(websocketResponseBuffer.Array!, 0, responseResult.Count);
+                    case "notification":
+                        TwitchEventNotificationProcessor.ProcessTwitchEvent(responseNode);
+                        break;
 
-                    JsonNode responseNode = JsonNode.Parse(response)!;
+                    case "session_keepalive":
+                        Console.WriteLine("Received 'session_keepalive'.");
+                        break;
 
-                    switch (responseNode["metadata"]!["message_type"]!.ToString())
-                    {
-                        case "notification":
-                            TwitchEventNotificationProcessor.ProcessTwitchEvent(responseNode);
-                            break;
+                    case "session_reconnect":
+                        Console.WriteLine("Instructed to reconnect - disconnecting websocket...");
+                        await DisconnectFromTwitchAsync();
+                        Console.WriteLine("Handled Disconnect.");
 
-                        case "session_keepalive":
-                            Console.WriteLine("Received 'session_keepalive'.");
-                            break;
+                        Console.WriteLine("Reconnecting websocket to Twitch...");
+                        bool success = await ConnectToTwitchAsync();
 
-                        case "session_reconnect":
-                            Console.WriteLine("Instructed to reconnect - disconnecting websocket...");
-                            await DisconnectFromTwitchAsync();
-                            Console.WriteLine("Handled Disconnect.");
+                        if (!success)
+                        {
+                            throw new Exception("Unable to reconnect websocket to Twitch post 'session_reconnect' instruction.");
+                        }
 
-                            Console.WriteLine("Reconnecting websocket to Twitch...");
-                            bool success = await ConnectToTwitchAsync();
+                        Console.WriteLine("Successfully Reconnected websocket to Twitch.");
 
-                            if (!success)
-                            {
-                                throw new Exception("Unable to reconnect websocket to Twitch post 'session_reconnect' instruction.");
-                            }
+                        break;
 
-                            Console.WriteLine("Successfully Reconnected websocket to Twitch.");
+                    case "revocation":
+                        HandleRevocation(responseNode["payload"]!["subscription"]!);
+                        break;
 
-                            break;
-
-                        case "revocation":
-                            HandleRevocation(responseNode["payload"]!["subscription"]!);
-                            break;
-
-                        default:
-                            Console.WriteLine($"Unknown message_type received: {responseNode["metadata"]!["message_type"]}");
-                            break;
-                    }
+                    default:
+                        Console.WriteLine($"Unknown message_type received: {responseNode["metadata"]!["message_type"]}");
+                        break;
                 }
-                else
-                {
-                    await DisconnectFromTwitchAsync();
-                    break;
-                }
-
             }
         }
         catch (OperationCanceledException)
