@@ -118,10 +118,6 @@ sealed class TwitchClient : IDisposable
             using HttpResponseMessage subscriptionResult = await httpClient.PostAsync(new Uri("https://api.twitch.tv/helix/eventsub/subscriptions"), httpContentJson, clientCancellationTokenSource.Token);
             string subscriptionResponse = await subscriptionResult.Content.ReadAsStringAsync(clientCancellationTokenSource.Token);
 
-            // JsonNode subscriptionNode = JsonNode.Parse(subscriptionResponse)!;
-
-            // TODO handle subscription response
-
             // Add to registry
             TwitchEventNotificationProcessor.RegisterTwitchEventHandler(eventSub);
 
