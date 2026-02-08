@@ -37,6 +37,11 @@ static class DeviceTokenSerializer
 
         string fileDir = Path.Combine(appDir, "twitch_device_token.json");
 
+        if (!File.Exists(fileDir))
+        {
+            return null;
+        }
+
         return JsonSerializer.Deserialize<TwitchDeviceToken>(File.ReadAllText(fileDir, Encoding.UTF8));
     }
 }
