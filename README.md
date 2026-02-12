@@ -14,12 +14,12 @@ Connect your game or app to Twitch and create engaging experiences. Embed chat f
 
 ## Table of Contents
 
-- Getting Started
-- Issues
-- Contributing
-- Suggestions
+- [Getting Started](#getting-started)
+- [Issues](#issues)
+- [Contributing](#contributing)
+- [Suggestions](#suggestions)
 
-## 💻 Getting Started
+## Getting Started
 
 ### Requirements
 
