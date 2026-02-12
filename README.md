@@ -69,7 +69,7 @@ Below is an example of using the client in a custom Godot Node to connect to Twi
   ```c#
   public partial class TwitchClientNode : Node
   {
-		// Handle to our TwitchClient object
+	// Handle to our TwitchClient object
   	private TwitchClient twitchClient;
   
   	public override void _Ready()
@@ -83,7 +83,6 @@ Below is an example of using the client in a custom Godot Node to connect to Twi
       // ...
   	}
   }
-  
   ```
 
 **2.** Call [`TwitchClient::ConnectToTwitchAsync()`](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/blob/main/client/TwitchClient.cs) to connect to Twitch
@@ -221,6 +220,39 @@ public partial class TwitchClientNode : Node
 }
 ```
 
+#### Reacting to Twitch Events
+
+To hook your project up to events Twitch sends, simply subscribe to one of the many events found within the [`EventRegistry`](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/blob/main/events/EventRegistry.cs) class with a valid function:
+
+```c#
+public override void _Ready()
+{
+	EventRegistry.ChatMessageReceived += ProcessChatter;
+}
+
+public override void _ExitTree()
+{
+	EventRegistry.ChatMessageReceived -= ProcessChatter;
+}
+```
+
+Below is an example implementation of the above function handling the result of an event subscription from the `ChatMessageReceived` event:
+
+```c#
+public void ProcessChatter(ChatMessage chatMessage)
+{
+	GD.Print($"{chatMessge.UserName} said: {chatMessage.Message}");
+}
+
+```
+
+> [!NOTE]
+> To use with **GDScript** - convert the events in the [`EventRegistry`](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/blob/main/events/EventRegistry.cs) class to [C# Godot Signals](https://docs.godotengine.org/en/stable/tutorials/scripting/c_sharp/c_sharp_signals.html).
+>
+> This is the only way for GDScript to 'communicate' with C# events.
+>
+> I'm looking to make this more convenient in the future, but with the interest of prioritising making this engine-agnostic, this is how to integrate with GDScript.
+
 ## 🔴 Issues
 
 Should you find any issues with the library, feel free to commit changes or create an Issue on the repository with the relevant information.
@@ -239,6 +271,8 @@ If you identify this is the case, please create an Issue with the `Service Chang
 ## 🙌🏻 Contributing
 
 If you'd like to help improve or extend the library, you're more than welcome to!
+
+Currently, there are many Twitch event subscriptions that still need creating according to Twitch's documentation. If you want to take a stab at creating some, take a look at the [`ChannelChatMessage`](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/blob/main/twitch_api/event_subs/ChannelChatMessage.cs) IEventSub.
 
 Before doing so, please ensure you've read and followed the guide below to make the process easier for everyone.
 
