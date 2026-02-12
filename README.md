@@ -1,10 +1,10 @@
 # Twitch-Integration-Library
 
-An open source Twitch Integration Library for C# based Video Games and Apps.
+An open-source Twitch integration library for C#-based games and applications.
 
 Connect your game or app to Twitch and create engaging experiences. Embed chat features or react to Twitch events in-game!
 
-- Built, tested and utilised within my own project
+- Built, tested and used within my own project
 - Engine-agnostic - use with Godot .NET, Unity or any other modern .NET engine
 - Designed for simplicity, extensibility and plug-and-play
 - Event-driven subscription
@@ -12,12 +12,15 @@ Connect your game or app to Twitch and create engaging experiences. Embed chat f
   - Device Code Grant Flow with polling
   - Automatic token refresh
 
+This project is maintained on a best-effort basis.
+
 ## Table of Contents
 
 - [Getting Started](#getting-started)
 - [Issues](#issues)
 - [Contributing](#contributing)
 - [Suggestions](#suggestions)
+- [Support Me](#support-me)
 
 ## Getting Started
 
@@ -54,7 +57,7 @@ For more information on setting this up, please refer to [Twitch's Developer Doc
 1. Clone the repo, or download the [most recent release here](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/releases).
 2. Move the downloaded code into your project.
 
-If you're updating, **remember to backup any details in the `Env`** (as these will be removed) and simply overwrite to contents of the library within your project.
+If you're updating, **remember to back up any details in `Env`** (these may be overwritten), then replace the contents of the library in your project.
 
 ### Using the Library
 
@@ -224,18 +227,18 @@ public partial class TwitchClientNode : Node
 
 Event Subscriptions are the cornerstone of how the library tells Twitch which events we'd like to receive.
 
-Each class intended for subscribe to events implements the `IEventSub` interface, creating the an event sub 'context.
+Each class is created with the intention of subscribing to Twitch events using the `IEventSub` interface, creating an event sub context.
 
 For example, see [`ChannelChatMessage`](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/blob/main/twitch_api/event_subs/ChannelChatMessage.cs). This class defines:
 - the payload of the subscription network request for that event subscription
-- the logic that is ran in the processing of this event
+- the logic that is run in the processing of this event
 
 The purpose of these classes is to decouple unique event logic to their events and away from the rest of the library, _or your code_.
 
 > [!NOTE]
 > There are only so many of these events as only a handful of them have been used so far.
 >
-> If you're like to contribute more of these according to the Twitch documentation, please see the Contribution section.
+> If you'd like to contribute more of these according to the Twitch documentation, please see the Contribution section.
 
 #### Reacting to Twitch Events
 
@@ -258,7 +261,7 @@ Below is an example implementation of the above function handling the result of 
 ```c#
 public void ProcessChatter(ChatMessage chatMessage)
 {
-	GD.Print($"{chatMessge.UserName} said: {chatMessage.Message}");
+	GD.Print($"{chatMessage.UserName} said: {chatMessage.Message}");
 }
 
 ```
@@ -272,16 +275,16 @@ public void ProcessChatter(ChatMessage chatMessage)
 
 ## Issues
 
-Should you find any issues with the library, feel free to commit changes or create an Issue on the repository with the relevant information.
+Should you find any issues with the library, feel free to fork the repository and submit a pull request or create an Issue on the repository with the relevant information.
 
-Issues will be picked up as and when there's capacity, of which, myself and contributors will do our best to address them when we can.
+Issues will be addressed as capacity allows. Myself and contributors will do their best to respond when possible.
 
 > [!IMPORTANT]
 > Issues not labelled correctly will not be picked up.
 
 ### External Service Changes
 
-As this library works with an external service, changes made to _that_ service will, of course, not be reflected in this repository. Changes that mirror the updated functionality of that service will need to be made by contributors.
+As this library works with an external service, changes made to _that_ service will, of course, not be reflected in this repository. Changes reflecting updates to external services may require community contributions.
 
 If you identify this is the case, please create an Issue with the `Service Change` label.
 
@@ -297,6 +300,9 @@ Before doing so, please ensure you've read and followed the guide below to make 
 > **Most Importantly: All skill levels are welcome!** Don't be put off if this is your first contribution or you're unsure of your own skill.
 >
 > This library was made by someone with the brain of a newt (me) - you might even be able to tell. Everyone is welcome!
+
+> [!IMPORTANT]
+> By contributing, you agree that your contribution has been provided legally and does not represent code of proprietary software of which you do not have rights.
 
 ### Documentation / Doc Blocks - Contribution Policy
 
@@ -340,7 +346,7 @@ If using GitHub Copilot description, please ensure it is accurate.
 
 Suggestions are welcome!
 
-You don't need to be able make code changes to help. Implementing and using the library is enough for you to identify quality of life improvements.
+You don't need to be able to make code changes to help. Implementing and using the library is enough for you to identify quality of life improvements.
 
 Keep in mind, not all suggestions _will_ be implemented. This will be down to capacity or being out-of-scope.
 
@@ -348,3 +354,9 @@ To create a suggestion, create a new Issue on the repository with the `Suggestio
 
 > [!IMPORTANT]
 > Issues not labelled correctly will not be picked up.
+
+## Support Me
+
+If you simply want to show appreciation for the creation of this library, consider supporting me over on Ko-fi!
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/S6S71U3ED5)
