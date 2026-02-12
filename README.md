@@ -220,6 +220,23 @@ public partial class TwitchClientNode : Node
 }
 ```
 
+#### Event Subscriptions
+
+Event Subscriptions are the cornerstone of how the library tells Twitch which events we'd like to receive.
+
+Each class intended for subscribe to events implements the `IEventSub` interface, creating the an event sub 'context.
+
+For example, see [`ChannelChatMessage`](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/blob/main/twitch_api/event_subs/ChannelChatMessage.cs). This class defines:
+- the payload of the subscription network request for that event subscription
+- the logic that is ran in the processing of this event
+
+The purpose of these classes is to decouple unique event logic to their events and away from the rest of the library, _or your code_.
+
+> [!NOTE]
+> There are only so many of these events as only a handful of them have been used so far.
+>
+> If you're like to contribute more of these according to the Twitch documentation, please see the Contribution section.
+
 #### Reacting to Twitch Events
 
 To hook your project up to events Twitch sends, simply subscribe to one of the many events found within the [`EventRegistry`](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/blob/main/events/EventRegistry.cs) class with a valid function:
