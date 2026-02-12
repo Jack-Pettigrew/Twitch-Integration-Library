@@ -270,7 +270,7 @@ public void ProcessChatter(ChatMessage chatMessage)
 >
 > I'm looking to make this more convenient in the future, but with the interest of prioritising making this engine-agnostic, this is how to integrate with GDScript.
 
-## 🔴 Issues
+## Issues
 
 Should you find any issues with the library, feel free to commit changes or create an Issue on the repository with the relevant information.
 
@@ -285,7 +285,7 @@ As this library works with an external service, changes made to _that_ service w
 
 If you identify this is the case, please create an Issue with the `Service Change` label.
 
-## 🙌🏻 Contributing
+## Contributing
 
 If you'd like to help improve or extend the library, you're more than welcome to!
 
@@ -336,7 +336,7 @@ All Pull Requests must contain sufficient descriptions fully detailing its chang
 
 If using GitHub Copilot description, please ensure it is accurate.
 
-## 💡 Suggestions
+## Suggestions
 
 Suggestions are welcome!
 
