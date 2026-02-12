@@ -12,6 +12,9 @@ using TIL.TwitchAPI.EventSubs;
 
 namespace TIL.Client;
 
+/// <summary>
+/// The class responsible for connecting to Twitch.
+/// </summary>
 sealed class TwitchClient : IDisposable
 {
     // REGULATION
@@ -31,13 +34,6 @@ sealed class TwitchClient : IDisposable
     // CANCELLATION TOKEN
     private CancellationTokenSource clientCancellationTokenSource;
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="clientId"></param>
-    /// <param name="userId"></param>
-    /// <param name="scopes"></param>
-    /// <param name="ReconnectWebsocketOnFailure"></param>
     public TwitchClient(string clientId, string userId, IEventSub[] scopes, bool autoReconnectWebsocketOnFailure = false)
     {
         TwitchSessionContext = new TwitchSessionContext
@@ -46,9 +42,6 @@ sealed class TwitchClient : IDisposable
             user_id = userId,
             scopes = scopes,
         };
-
-        // httpClient = new System.Net.Http.HttpClient();
-        // twitchWebSocketClient = new TwitchWebSocketClient(30, TwitchSessionContext);
 
         SetAutoconnectWebsocketOnFailure(autoReconnectWebsocketOnFailure);
     }
@@ -127,6 +120,10 @@ sealed class TwitchClient : IDisposable
         Console.WriteLine("Finished Subbing to EventSubs.");
     }
 
+    /// <summary>
+    /// Sets whether the client will attempt to reconnect automatically if the websocket fails.
+    /// </summary>
+    /// <param name="toggle"></param>
     public void SetAutoconnectWebsocketOnFailure(bool toggle)
     {
         if (toggle == AutoReconnectWebsocketOnFailure) return;
