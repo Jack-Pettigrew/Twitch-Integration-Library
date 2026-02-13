@@ -8,7 +8,7 @@ An open-source Twitch integration library for C#-based games and applications.
 Connect your game or app to Twitch and create engaging experiences. Embed chat features or react to Twitch events in-game!
 
 - Built, tested and used within my own project
-- Engine-agnostic - use with Godot .NET, Unity or any other modern .NET engine
+- Engine-agnostic - use with [Godot .NET](https://godotengine.org/), [Unity](https://unity.com/) or any other modern .NET engine
 - Designed for simplicity, extensibility and plug-and-play
 - Event-driven subscription
 - Authentication built-in
@@ -41,7 +41,7 @@ As long as your engine or app supports the above, you're good to go!
 #####  Using with Godot and GDScript
 
 You can use this library even if you're primarily programming with GDScript. There are two requirements:
-- You're using Godot 4.0+ .NET
+- You're using Godot 4.4+
 - You convert the events in the [`EventRegistry`](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/blob/main/events/EventRegistry.cs) class to [C# Godot Signals](https://docs.godotengine.org/en/stable/tutorials/scripting/c_sharp/c_sharp_signals.html)
 	- This is the only way for GDScript to 'communicate' with C# events
 
