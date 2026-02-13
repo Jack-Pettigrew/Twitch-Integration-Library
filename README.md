@@ -48,7 +48,7 @@ I'm looking to make this more convenient in the future, but with the interest of
 
 Before you can use this library, you will need to register a new app on [Twitch's Developer Console](https://dev.twitch.tv/).
 
-Registering allows you to utilise Twitch's API as a known application, while obtaining your super secret `CLIENT_ID` and `CLIENT_SECRET` (the latter is dependent on your use case).
+Registering allows you to utilise Twitch's API as a known application, while obtaining your super secret `CLIENT_ID` and `CLIENT_SECRET`.
 
 For more information on setting this up, please refer to [Twitch's Developer Documentation](https://dev.twitch.tv/docs/authentication/register-app/).
 

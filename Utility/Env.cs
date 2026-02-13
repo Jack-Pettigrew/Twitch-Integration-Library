@@ -5,6 +5,7 @@ public static class Env
     /// <summary>
     /// <para>The CLIENT_SECRET of your registered appication - supplied by Twitch.</para>
     /// <para>This is largely optional but included in case you require it.</para>
+    /// <para>This is largely used for Token refreshing but your mileage may vary.</para>
     /// </summary>
     public static string CLIENT_SECRET { get; } = "CLIENT_SECRET_IF_NEEDED";
 

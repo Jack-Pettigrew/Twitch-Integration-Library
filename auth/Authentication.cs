@@ -212,7 +212,7 @@ static class Authentication
         FormUrlEncodedContent postData = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["client_id"] = clientId,
-            // ["client_secret"] = Env.CLIENT_SECRET,
+            ["client_secret"] = Env.CLIENT_SECRET,
             ["grant_type"] = "refresh_token",
             ["refresh_token"] = refreshToken
         });
