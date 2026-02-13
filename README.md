@@ -1,4 +1,7 @@
 # Twitch-Integration-Library
+<div align="center">
+	<img src="til_logo.png" height="200" alt="TIL Logo">
+</div>
 
 An open-source Twitch integration library for C#-based games and applications.
 
