@@ -52,6 +52,10 @@ Registering allows you to utilise Twitch's API as a known application, while obt
 
 For more information on setting this up, please refer to [Twitch's Developer Documentation](https://dev.twitch.tv/docs/authentication/register-app/).
 
+### Quick Start
+
+If you just want a reference to quickly get started, please see [`Example.cs`](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/blob/main/Example.cs) for an example implementation.
+
 ### Installing / Updating
 
 1. Clone the repo, or download the [most recent release here](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/releases).
