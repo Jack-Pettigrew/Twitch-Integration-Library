@@ -112,7 +112,14 @@ sealed class TwitchClient : IDisposable
             string subscriptionResponse = await subscriptionResult.Content.ReadAsStringAsync(clientCancellationTokenSource.Token);
 
             // Add to registry
-            TwitchEventNotificationProcessor.RegisterTwitchEventHandler(eventSub);
+            try
+            {
+                TwitchEventNotificationProcessor.RegisterTwitchEventHandler(eventSub);
+            }
+            catch (TwitchEventSubExistsException e)
+            {
+                // Ignore these exceptions by default
+            }
 
             Console.WriteLine(subscriptionResponse);
         }

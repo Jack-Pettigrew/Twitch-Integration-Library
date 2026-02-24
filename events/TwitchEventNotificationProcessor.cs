@@ -15,18 +15,12 @@ public static class TwitchEventNotificationProcessor
     {
         if (!processorDictionary.TryAdd(eventSub.GetSubscriptionType(), eventSub))
         {
-            string message;
-
             if (processorDictionary.ContainsKey(eventSub.GetSubscriptionType()))
             {
-                message = "EventSub handler already registered for:";
-            }
-            else
-            {
-                message = "Unable to register event handler for:";
+                throw new TwitchEventSubExistsException($"EventSub handler already registered for: {eventSub.GetSubscriptionType()}");
             }
 
-            throw new UnableToRegisterEventSubHandlerException($"{message} {eventSub.GetSubscriptionType()}");
+            throw new UnableToRegisterEventSubHandlerException($"Unable to register event handler for: {eventSub.GetSubscriptionType()}");
         }
     }
 
