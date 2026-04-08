@@ -9,4 +9,5 @@ public class ChatMessage : EventArgs
     public string UserName { set; get; } = "";
     public string Message { set; get; } = "";
     public bool IsReply { set; get; } = false;
+    public Badges Badges { set; get; } = new Badges();
 }

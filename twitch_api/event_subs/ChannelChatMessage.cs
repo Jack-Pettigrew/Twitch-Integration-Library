@@ -43,7 +43,8 @@ class ChannelChatMessage : IEventSub
             UserId = twitchResponseJson["payload"]!["event"]!["chatter_user_id"]!.ToString(),
             UserName = twitchResponseJson["payload"]!["event"]!["chatter_user_name"]!.ToString(),
             Message = twitchResponseJson["payload"]!["event"]!["message"]!["text"]!.ToString(),
-            IsReply = twitchResponseJson["payload"]!["event"]!.AsObject().ContainsKey("reply")
+            IsReply = twitchResponseJson["payload"]!["event"]!.AsObject().ContainsKey("reply"),
+            Badges = new Badges(twitchResponseJson["payload"]!["event"]!["badges"]!)
         };
 
         EventRegistry.TriggerChatMessageReceived(chatMessage);
