@@ -60,5 +60,7 @@ public class Badges
 
     public bool IsSubscriber() => badges.Contains("subscriber") || badges.Contains("founder");
 
+    public bool IsFounder() => badges.Contains("founder");
+
     public bool IsSubGifter() => badges.Contains("sub-gifter");
 }
