@@ -58,7 +58,7 @@ public class Badges
 
     public bool IsModerator() => badges.Contains("moderator");
 
-    public bool IsSubscriber() => badges.Contains("subscriber");
+    public bool IsSubscriber() => badges.Contains("subscriber") || badges.Contains("founder");
 
     public bool IsSubGifter() => badges.Contains("sub-gifter");
 }
