@@ -124,7 +124,7 @@ static class Authentication
             AccessToken = tokenSuccess.access_token,
             RefreshToken = tokenSuccess.refresh_token ?? "",
             ExpiresAtUtc = tokenExpiry,
-            Scopes = tokenSuccess.scopes ?? Array.Empty<string>()
+            Scopes = tokenSuccess.scope ?? Array.Empty<string>()
         };
 
         DeviceTokenSerializer.SaveDeviceToken(twitchDeviceToken);
@@ -248,7 +248,7 @@ static class Authentication
                 AccessToken = tokenSuccess.access_token,
                 RefreshToken = tokenSuccess.refresh_token ?? "",
                 ExpiresAtUtc = tokenExpiry,
-                Scopes = tokenSuccess.scopes ?? Array.Empty<string>()
+                Scopes = tokenSuccess.scope ?? Array.Empty<string>()
             };
 
             DeviceTokenSerializer.SaveDeviceToken(twitchDeviceToken);
