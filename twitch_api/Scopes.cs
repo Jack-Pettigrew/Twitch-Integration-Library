@@ -11,13 +11,6 @@ public static class Scopes
     /// </summary>
     public const string MODERATOR_READ_FOLLOWERS = "moderator:read:followers";
 
-    /// <summary>
-    /// <para>API: Get Bits Leaderboard</para>
-    /// <para>EventSub: Channel Bits Use</para>
-    /// <para>EventSub: Channel Cheer</para>
-    /// </summary>
-    public const string CHANNEL_BITS_USE = "bits:read";
-
     /// <summary> 
     /// <para>API: Get Ad Schedule</para>
     /// <para>EventSub: Channel Ad Break Begin</para>
@@ -38,7 +31,7 @@ public static class Scopes
     /// <para>EventSub: Channel Bits Use</para>
     /// <para>EventSub: Channel Cheer</para>
     /// </summary>
-    public const string CHANNEL_BITS_READ = "channel:bits:read";
+    public const string CHANNEL_BITS_READ = "bits:read";
 
     /// <summary>
     /// <para>API: Get Custom Reward</para>
