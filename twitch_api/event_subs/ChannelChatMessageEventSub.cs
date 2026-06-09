@@ -4,6 +4,9 @@ using TIL.Events;
 
 namespace TIL.TwitchAPI.EventSubs;
 
+/// <summary>
+/// Channel chat message received event.
+/// </summary>
 class ChannelChatMessageEventSub : IEventSub
 {
     public string GetScope()

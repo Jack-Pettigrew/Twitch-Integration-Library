@@ -5,6 +5,9 @@ using TIL.Events;
 
 namespace TIL.TwitchAPI.EventSubs;
 
+/// <summary>
+/// A new follower event.
+/// </summary>
 public partial class ChannelFollowEventSub : IEventSub
 {
     public string GetScope()
