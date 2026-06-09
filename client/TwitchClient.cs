@@ -99,11 +99,11 @@ sealed class TwitchClient : IDisposable
             throw new InvalidDeviceCodeException("Unable to subscribe to EventSubs due to null device_token.");
         }
 
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TwitchSessionContext.twitch_device_token.AccessToken);
+        httpClient.DefaultRequestHeaders.Add("Client-Id", TwitchSessionContext.client_id);
+
         foreach (var eventSub in eventSubs)
         {
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TwitchSessionContext.twitch_device_token.AccessToken);
-            httpClient.DefaultRequestHeaders.Add("Client-Id", TwitchSessionContext.client_id);
-
             byte[] payload = JsonSerializer.SerializeToUtf8Bytes(eventSub.ToSubscriptionPayload(TwitchSessionContext));
 
             using StringContent httpContentJson = new StringContent(Encoding.UTF8.GetString(payload), Encoding.UTF8, "application/json");
