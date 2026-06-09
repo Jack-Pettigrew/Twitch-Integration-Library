@@ -6,10 +6,13 @@ public static class EventRegistry
 {
     public delegate void TwitchEventHandler<T>(T twitchEventArg) where T : EventArgs;
 
+    // CHANNEL
     public static event TwitchEventHandler<ChatMessage>? ChatMessageReceived;
     public static event TwitchEventHandler<ChannelFollow> ChannelFollowReceived;
     public static event TwitchEventHandler<ChannelSubscribe> ChannelSubscribeReceived;
     public static event TwitchEventHandler<ChannelSubscribeMessage> ChannelSubscribeMessageReceived;
+    // POLL
+    public static event TwitchEventHandler<PollBegin>? PollBeginReceived;
 
     public static void TriggerChatMessageReceived(ChatMessage chatMessage)
     {
@@ -29,5 +32,10 @@ public static class EventRegistry
     public static void TriggerChannelSubscribeMessageReceived(ChannelSubscribeMessage channelSubscribeMessage)
     {
         ChannelSubscribeMessageReceived?.Invoke(channelSubscribeMessage);
+    }
+
+    public static void TriggerPollBeginReceived(PollBegin pollBegin)
+    {
+        PollBeginReceived?.Invoke(pollBegin);
     }
 }
