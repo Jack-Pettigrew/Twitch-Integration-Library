@@ -15,6 +15,7 @@ public static class EventRegistry
     // POLL
     public static event TwitchEventHandler<PollBegin>? PollBeginReceived;
     public static event TwitchEventHandler<PollProgress>? PollProgressReceived;
+    public static event TwitchEventHandler<PollEnd>? PollEndReceived;
 
     public static void TriggerChatMessageReceived(ChatMessage chatMessage)
     {
@@ -44,5 +45,10 @@ public static class EventRegistry
     public static void TriggerPollProgressReceived(PollProgress pollProgress)
     {
         PollProgressReceived?.Invoke(pollProgress);
+    }
+
+    public static void TriggerPollEndReceived(PollEnd pollEnd)
+    {
+        PollEndReceived?.Invoke(pollEnd);
     }
 }
