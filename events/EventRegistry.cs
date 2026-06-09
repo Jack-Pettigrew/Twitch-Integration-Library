@@ -17,6 +17,9 @@ public static class EventRegistry
     public static event TwitchEventHandler<PollProgress>? PollProgressReceived;
     public static event TwitchEventHandler<PollEnd>? PollEndReceived;
 
+    // REWARDS
+    public static event TwitchEventHandler<ChannelPointsAutomaticRewardRedemption>? ChannelPointsAutomaticRewardRedemptionReceived;
+
     public static void TriggerChatMessageReceived(ChatMessage chatMessage)
     {
         ChatMessageReceived?.Invoke(chatMessage);
@@ -50,5 +53,10 @@ public static class EventRegistry
     public static void TriggerPollEndReceived(PollEnd pollEnd)
     {
         PollEndReceived?.Invoke(pollEnd);
+    }
+
+    public static void TriggerChannelPointsAutomaticRewardRedemptionReceived(ChannelPointsAutomaticRewardRedemption channelPointsAutomaticRewardRedemption)
+    {
+        ChannelPointsAutomaticRewardRedemptionReceived?.Invoke(channelPointsAutomaticRewardRedemption);
     }
 }
