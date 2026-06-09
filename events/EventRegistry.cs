@@ -19,6 +19,7 @@ public static class EventRegistry
 
     // REWARDS
     public static event TwitchEventHandler<ChannelPointsAutomaticRewardRedemption>? ChannelPointsAutomaticRewardRedemptionReceived;
+    public static event TwitchEventHandler<ChannelPointsCustomRewardRedemption>? ChannelPointsCustomRewardRedemptionReceived;
 
     public static void TriggerChatMessageReceived(ChatMessage chatMessage)
     {
@@ -58,5 +59,10 @@ public static class EventRegistry
     public static void TriggerChannelPointsAutomaticRewardRedemptionReceived(ChannelPointsAutomaticRewardRedemption channelPointsAutomaticRewardRedemption)
     {
         ChannelPointsAutomaticRewardRedemptionReceived?.Invoke(channelPointsAutomaticRewardRedemption);
+    }
+
+    public static void TriggerChannelPointsCustomRewardRedemptionReceived(ChannelPointsCustomRewardRedemption channelPointsCustomRewardRedemption)
+    {
+        ChannelPointsCustomRewardRedemptionReceived?.Invoke(channelPointsCustomRewardRedemption);
     }
 }
