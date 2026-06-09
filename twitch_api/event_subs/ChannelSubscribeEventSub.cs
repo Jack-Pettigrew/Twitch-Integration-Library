@@ -42,10 +42,10 @@ public partial class ChannelSubscribeEventSub : IEventSub
     {
         ChannelSubscribe channelSubscribe = new ChannelSubscribe
         {
-            UserId = twitchResponseJson["payload"]!["event"]!["user_id"].ToString(),
-            UserName = twitchResponseJson["payload"]!["event"]!["user_name"].ToString(),
-            Tier = twitchResponseJson["payload"]!["event"]!["tier"].ToString(),
-            IsGift = (bool)twitchResponseJson["payload"]!["event"]!["is_gift"]
+            UserId = twitchResponseJson["payload"]!["event"]!["user_id"]!.ToString(),
+            UserName = twitchResponseJson["payload"]!["event"]!["user_name"]!.ToString(),
+            Tier = twitchResponseJson["payload"]!["event"]!["tier"]!.ToString(),
+            IsGift = (bool)twitchResponseJson["payload"]!["event"]!["is_gift"]!
         };
 
         EventRegistry.TriggerChannelSubscribeReceived(channelSubscribe);

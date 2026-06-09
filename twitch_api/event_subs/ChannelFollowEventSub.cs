@@ -43,9 +43,9 @@ public partial class ChannelFollowEventSub : IEventSub
     {
         ChannelFollow channelFollow = new ChannelFollow
         {
-            UserId = twitchResponseJson["payload"]!["event"]!["user_id"].ToString(),
-            UserName = twitchResponseJson["payload"]!["event"]!["user_name"].ToString(),
-            FollowedAt = DateTime.Parse(twitchResponseJson["payload"]!["event"]!["user_name"].ToString())
+            UserId = twitchResponseJson["payload"]!["event"]!["user_id"]!.ToString(),
+            UserName = twitchResponseJson["payload"]!["event"]!["user_name"]!.ToString(),
+            FollowedAt = DateTime.Parse(twitchResponseJson["payload"]!["event"]!["user_name"]!.ToString())
         };
 
         EventRegistry.TriggerChannelFollowReceived(channelFollow);
