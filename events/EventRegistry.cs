@@ -8,9 +8,10 @@ public static class EventRegistry
 
     // CHANNEL
     public static event TwitchEventHandler<ChatMessage>? ChatMessageReceived;
-    public static event TwitchEventHandler<ChannelFollow> ChannelFollowReceived;
-    public static event TwitchEventHandler<ChannelSubscribe> ChannelSubscribeReceived;
-    public static event TwitchEventHandler<ChannelSubscribeMessage> ChannelSubscribeMessageReceived;
+    public static event TwitchEventHandler<ChannelFollow>? ChannelFollowReceived;
+    public static event TwitchEventHandler<ChannelSubscribe>? ChannelSubscribeReceived;
+    public static event TwitchEventHandler<ChannelSubscribeMessage>? ChannelSubscribeMessageReceived;
+
     // POLL
     public static event TwitchEventHandler<PollBegin>? PollBeginReceived;
 
