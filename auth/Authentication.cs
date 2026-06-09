@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualBasic;
 using TIL.Client;
 using TIL.DataContainers;
 using TIL.Exceptions;
@@ -44,27 +45,36 @@ static class Authentication
             Console.WriteLine("Checking saved Device Token...");
 
             // Valid Check
-            if (DateTime.UtcNow >= twitchDeviceToken.ExpiresAtUtc && twitchDeviceToken.RefreshToken != string.Empty)
+            if (!DetectNewScopesAdded(twitchSessionContext, twitchDeviceToken))
             {
-                Console.WriteLine("Device Token Expired. Attempting to refresh...");
+                if (DateTime.UtcNow >= twitchDeviceToken.ExpiresAtUtc && twitchDeviceToken.RefreshToken != string.Empty)
+                {
+                    Console.WriteLine("Device Token Expired. Attempting to refresh...");
 
-                try
-                {
-                    // Refresh Token
-                    twitchDeviceToken = await RefreshDeviceToken(twitchSessionContext.client_id!, twitchDeviceToken.RefreshToken);
-                    return twitchDeviceToken;
+                    try
+                    {
+                        // Refresh Token
+                        twitchDeviceToken = await RefreshDeviceToken(twitchSessionContext.client_id!, twitchDeviceToken.RefreshToken);
+                        return twitchDeviceToken;
+                    }
+                    catch (Exception e)
+                    {
+                        // Let it go into to device auth flow
+                        Console.WriteLine(e.Message);
+                    }
                 }
-                catch (Exception e)
+                else
                 {
-                    // Let it go into to device auth flow
-                    Console.WriteLine(e.Message);
+                    // TODO final check with Twitch if token is valid (could have been revoked)
+
+                    Console.WriteLine("Saved Device Token is valid.");
+                    Console.WriteLine($"Using device token: {twitchDeviceToken}");
+                    return twitchDeviceToken;
                 }
             }
             else
             {
-                Console.WriteLine("Saved Device Token is valid.");
-                Console.WriteLine($"Using device token: {twitchDeviceToken}");
-                return twitchDeviceToken;
+                Console.WriteLine("New scopes have since been added - requesting a new Token...");
             }
         }
         else
@@ -264,6 +274,13 @@ static class Authentication
         }
 
         throw new InvalidOperationException($"Device Flow polling failed: {(int)refreshResponse.StatusCode} {refreshResponse.ReasonPhrase}. Response: {tokenFailed.message}");
+    }
+
+    private static bool DetectNewScopesAdded(TwitchSessionContext twitchSessionContext, TwitchDeviceToken twitchDeviceToken)
+    {
+        List<string> additionalScopes = new List<string>(twitchSessionContext.scopes.Select(x => x.GetScope()).Except(twitchDeviceToken.Scopes));
+
+        return additionalScopes.Count > 0;
     }
 
     private static void Cleanup()
