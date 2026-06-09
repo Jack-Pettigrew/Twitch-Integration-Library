@@ -9,7 +9,7 @@ public static class Scopes
     /// <para>API: Get Channel Followers</para>
     /// <para>EventSub: Channel Follow</para>
     /// </summary>
-    public const string MODERATOR_READ_FOLLOWERS = "moderation:read:followers";
+    public const string MODERATOR_READ_FOLLOWERS = "moderator:read:followers";
 
     /// <summary>
     /// <para>API: Get Bits Leaderboard</para>
