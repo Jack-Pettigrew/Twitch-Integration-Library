@@ -6,7 +6,7 @@ using TIL.Events;
 namespace TIL.TwitchAPI.EventSubs;
 
 /// <summary>
-/// A new Poll was created subscription event.
+/// A Poll ended subscription event.
 /// </summary>
 public partial class ChannelPollEndEventSub : IEventSub
 {

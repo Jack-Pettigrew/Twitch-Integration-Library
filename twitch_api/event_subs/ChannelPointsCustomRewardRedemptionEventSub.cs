@@ -6,7 +6,7 @@ using TIL.Events;
 namespace TIL.TwitchAPI.EventSubs;
 
 /// <summary>
-/// A new Poll was created subscription event.
+/// A user redeemed a Streamer curated Channel Points Reward.
 /// </summary>
 public partial class ChannelPointsCustomRewardRedemptionEventSub : IEventSub
 {
