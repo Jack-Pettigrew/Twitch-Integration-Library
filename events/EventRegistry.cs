@@ -9,6 +9,7 @@ public static class EventRegistry
     public static event TwitchEventHandler<ChatMessage>? ChatMessageReceived;
     public static event TwitchEventHandler<ChannelFollow> ChannelFollowReceived;
     public static event TwitchEventHandler<ChannelSubscribe> ChannelSubscribeReceived;
+    public static event TwitchEventHandler<ChannelSubscribeMessage> ChannelSubscribeMessageReceived;
 
     public static void TriggerChatMessageReceived(ChatMessage chatMessage)
     {
@@ -23,5 +24,10 @@ public static class EventRegistry
     public static void TriggerChannelSubscribeReceived(ChannelSubscribe channelSubscribe)
     {
         ChannelSubscribeReceived?.Invoke(channelSubscribe);
+    }
+
+    public static void TriggerChannelSubscribeMessageReceived(ChannelSubscribeMessage channelSubscribeMessage)
+    {
+        ChannelSubscribeMessageReceived?.Invoke(channelSubscribeMessage);
     }
 }
