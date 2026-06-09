@@ -4,7 +4,7 @@ using TIL.TwitchAPI.EventSubs;
 
 using TwitchClient twitchClient = new TwitchClient(TIL.Env.CLIENT_ID, TIL.Env.USER_ID, new IEventSub[]
 {
-    new ChannelChatMessage()
+    new ChannelChatMessageEventSub()
 });
 
 var success = await twitchClient.ConnectToTwitchAsync();

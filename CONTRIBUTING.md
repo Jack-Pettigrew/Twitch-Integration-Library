@@ -2,7 +2,7 @@
 
 If you'd like to help improve or extend the library, you're more than welcome to!
 
-Currently, there are many Twitch event subscriptions that still need creating according to Twitch's documentation. If you want to take a stab at creating some, take a look at the [`ChannelChatMessage`](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/blob/main/twitch_api/event_subs/ChannelChatMessage.cs) IEventSub.
+Currently, there are many Twitch event subscriptions that still need creating according to Twitch's documentation. If you want to take a stab at creating some, take a look at the [`ChannelChatMessageEventSub`](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/blob/main/twitch_api/event_subs/ChannelChatMessageEventSub.cs) IEventSub.
 
 Before doing so, please ensure you've read and followed the guide below to make the process easier for everyone.
 

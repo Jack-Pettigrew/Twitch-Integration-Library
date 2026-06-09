@@ -87,7 +87,7 @@ Below is an example of using the client in a custom Godot Node to connect to Twi
   		// Initialise Twitch Client with details and subscriptions
   		twitchClient = new TwitchClient(Env.CLIENT_ID, Env.USER_ID, new IEventSub[]
   		{
-  			new ChannelChatMessage()
+  			new ChannelChatMessageEventSub()
   		});
 
       // ...
@@ -103,7 +103,7 @@ public override void _Ready()
 	// Initialise Twitch Client with details and subscriptions
 	twitchClient = new TwitchClient(Env.CLIENT_ID, Env.USER_ID, new IEventSub[]
 	{
-		new ChannelChatMessage()
+		new ChannelChatMessageEventSub()
 	});
 
 	// Defer to an async function for more control over initialisation (optional)
@@ -180,7 +180,7 @@ public partial class TwitchClientNode : Node
 		// Initialise Twitch Client with details and subscriptions
 		twitchClient = new TwitchClient(Env.CLIENT_ID, Env.USER_ID, new IEventSub[]
 		{
-			new ChannelChatMessage()
+			new ChannelChatMessageEventSub()
 		});
 
 		_ = StartTwitchAsync();
@@ -236,7 +236,7 @@ Event Subscriptions are the cornerstone of how the library tells Twitch which ev
 
 Each class is created with the intention of subscribing to Twitch events using the `IEventSub` interface, creating an event sub context.
 
-For example, see [`ChannelChatMessage`](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/blob/main/twitch_api/event_subs/ChannelChatMessage.cs). This class defines:
+For example, see [`ChannelChatMessageEventSub`](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/blob/main/twitch_api/event_subs/ChannelChatMessageEventSub.cs). This class defines:
 - the payload of the subscription network request for that event subscription
 - the logic that is run in the processing of this event
 

@@ -4,7 +4,7 @@ using TIL.Events;
 
 namespace TIL.TwitchAPI.EventSubs;
 
-class ChannelChatMessage : IEventSub
+class ChannelChatMessageEventSub : IEventSub
 {
     public string GetScope()
     {
