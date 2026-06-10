@@ -46,7 +46,7 @@ public partial class ChannelGoalProgressEventSub : IEventSub
             Description = twitchResponseJson["payload"]!["event"]!["Description"]!.ToString(),
             CurrentAmount = (int)twitchResponseJson["payload"]!["event"]!["current_amount"]!,
             TargetAmount = (int)twitchResponseJson["payload"]!["event"]!["target_amount"]!,
-            StartedAt = DateTime.Parse(twitchResponseJson["payload"]!["event"]!["message"]!["text"]!.ToString())
+            StartedAt = DateTime.Parse(twitchResponseJson["payload"]!["event"]!["message"]!["started_at"]!.ToString())
         };
 
         EventRegistry.TriggerGoalProgressReceived(goalProgress);
