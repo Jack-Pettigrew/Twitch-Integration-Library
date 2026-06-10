@@ -27,6 +27,7 @@ public static class EventRegistry
     // GOAL
     public static event TwitchEventHandler<GoalBegin>? GoalBeginReceived;
     public static event TwitchEventHandler<GoalProgress>? GoalProgressReceived;
+    public static event TwitchEventHandler<GoalEnd>? GoalEndReceived;
 
     public static void TriggerChatMessageReceived(ChatMessage chatMessage)
     {
@@ -86,5 +87,10 @@ public static class EventRegistry
     public static void TriggerGoalProgressReceived(GoalProgress goalProgress)
     {
         GoalProgressReceived?.Invoke(goalProgress);
+    }
+
+    public static void TriggerGoalEndReceived(GoalEnd goalEnd)
+    {
+        GoalEndReceived?.Invoke(goalEnd);
     }
 }
