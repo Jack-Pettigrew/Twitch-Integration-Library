@@ -29,6 +29,9 @@ public static class EventRegistry
     public static event TwitchEventHandler<GoalProgress>? GoalProgressReceived;
     public static event TwitchEventHandler<GoalEnd>? GoalEndReceived;
 
+    // HYPE TRAIN
+    public static event TwitchEventHandler<HypeTrainBegin>? HypeTrainBeginReceived;
+
     public static void TriggerChatMessageReceived(ChatMessage chatMessage)
     {
         ChatMessageReceived?.Invoke(chatMessage);
@@ -92,5 +95,10 @@ public static class EventRegistry
     public static void TriggerGoalEndReceived(GoalEnd goalEnd)
     {
         GoalEndReceived?.Invoke(goalEnd);
+    }
+
+    public static void TriggerHypeTrainBeginReceived(HypeTrainBegin hypeTrainBegin)
+    {
+        HypeTrainBeginReceived?.Invoke(hypeTrainBegin);
     }
 }
