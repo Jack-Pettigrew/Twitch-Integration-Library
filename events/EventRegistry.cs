@@ -31,6 +31,7 @@ public static class EventRegistry
 
     // HYPE TRAIN
     public static event TwitchEventHandler<HypeTrainBegin>? HypeTrainBeginReceived;
+    public static event TwitchEventHandler<HypeTrainProgress>? HypeTrainProgressReceived;
 
     public static void TriggerChatMessageReceived(ChatMessage chatMessage)
     {
@@ -100,5 +101,10 @@ public static class EventRegistry
     public static void TriggerHypeTrainBeginReceived(HypeTrainBegin hypeTrainBegin)
     {
         HypeTrainBeginReceived?.Invoke(hypeTrainBegin);
+    }
+
+    public static void TriggerHypeTrainProgressReceived(HypeTrainProgress hypeTrainProgress)
+    {
+        HypeTrainProgressReceived?.Invoke(hypeTrainProgress);
     }
 }
