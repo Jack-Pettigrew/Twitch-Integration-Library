@@ -8,7 +8,7 @@ namespace TIL.TwitchAPI.EventSubs;
 /// <summary>
 /// A new Goal has been created subscription event.
 /// </summary>
-public partial class ChannelGoalBegin : IEventSub
+public partial class ChannelGoalBeginEventSub : IEventSub
 {
     public string GetScope()
     {
