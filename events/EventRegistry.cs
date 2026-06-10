@@ -24,6 +24,9 @@ public static class EventRegistry
     // BITS
     public static event TwitchEventHandler<BitsUse>? BitsUseReceived;
 
+    // GOAL
+    public static event TwitchEventHandler<GoalBegin>? GoalBeginReceived;
+
     public static void TriggerChatMessageReceived(ChatMessage chatMessage)
     {
         ChatMessageReceived?.Invoke(chatMessage);
@@ -72,5 +75,10 @@ public static class EventRegistry
     public static void TriggerBitsUseReceived(BitsUse bitsUse)
     {
         BitsUseReceived?.Invoke(bitsUse);
+    }
+
+    public static void TriggersGoalBeginReceived(GoalBegin goalBegin)
+    {
+        GoalBeginReceived?.Invoke(goalBegin);
     }
 }
