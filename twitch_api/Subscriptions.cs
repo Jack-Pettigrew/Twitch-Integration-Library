@@ -70,6 +70,9 @@ public static class Subscriptions
     public const string GOAL_BEGIN = "channel.goal.begin";
     public const string GOAL_PROGRESS = "channel.goal.progress";
     public const string GOAL_END = "channel.goal.end";
+    public const string HYPE_TRAIN_BEGIN = "channel.hype_train.begin";
+    public const string HYPE_TRAIN_PROGRESS = "channel.hype_train.progress";
+    public const string HYPE_TRAIN_END = "channel.hype_train.end";
     public const string SHIELD_MODE_BEGIN = "channel.shield_mode.begin";
     public const string SHIELD_MODE_END = "channel.shield_mode.end";
     public const string SHOUTOUT_CREATE = "channel.shoutout.create";
