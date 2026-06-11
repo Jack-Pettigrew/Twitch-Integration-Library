@@ -45,10 +45,10 @@ public partial class ChannelPointsCustomRewardRedemptionEventSub : IEventSub
             UserId = twitchResponseJson["payload"]!["event"]!["user_id"]!.ToString(),
             UserName = twitchResponseJson["payload"]!["event"]!["user_name"]!.ToString(),
             UserInput = twitchResponseJson["payload"]!["event"]!["user_input"]!.ToString(),
-            Status = twitchResponseJson["payload"]!["event"]!["reward"]!["status"]!.ToString(),
-            Title = twitchResponseJson["payload"]!["event"]!["message"]!["reward"]!["title"]!.ToString(),
-            Cost = (int)twitchResponseJson["payload"]!["event"]!["message"]!["reward"]!["cost"]!,
-            RewardPrompt = twitchResponseJson["payload"]!["event"]!["message"]!["reward"]!["prompt"]!.ToString(),
+            Status = twitchResponseJson["payload"]!["event"]!["status"]!.ToString(),
+            Title = twitchResponseJson["payload"]!["event"]!["reward"]!["title"]!.ToString(),
+            Cost = (int)twitchResponseJson["payload"]!["event"]!["reward"]!["cost"]!,
+            RewardPrompt = twitchResponseJson["payload"]!["event"]!["reward"]!["prompt"]!.ToString(),
             RedeemedAt = DateTime.Parse(twitchResponseJson["payload"]!["event"]!["redeemed_at"]!.ToString())
         };
 
