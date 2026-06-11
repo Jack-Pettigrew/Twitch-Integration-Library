@@ -21,6 +21,9 @@ public static class EventRegistry
     public static event TwitchEventHandler<ChannelPointsAutomaticRewardRedemption>? ChannelPointsAutomaticRewardRedemptionReceived;
     public static event TwitchEventHandler<ChannelPointsCustomRewardRedemption>? ChannelPointsCustomRewardRedemptionReceived;
 
+    // POWER UPS
+    public static event TwitchEventHandler<ChannelCustomPowerUpRedemptionAdd>? ChannelCustomPowerUpRedemptionAddReceived;
+
     // BITS
     public static event TwitchEventHandler<BitsUse>? BitsUseReceived;
 
@@ -112,5 +115,10 @@ public static class EventRegistry
     public static void TriggerHypeTrainEndReceived(HypeTrainEnd hypeTrainEnd)
     {
         HypeTrainEndReceived?.Invoke(hypeTrainEnd);
+    }
+
+    public static void TriggerChannelCustomPowerUpRedemptionAddReceived(ChannelCustomPowerUpRedemptionAdd channelCustomPowerUpRedemptionAdd)
+    {
+        ChannelCustomPowerUpRedemptionAddReceived?.Invoke(channelCustomPowerUpRedemptionAdd);
     }
 }

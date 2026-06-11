@@ -20,6 +20,7 @@ public static class Subscriptions
     public const string CHANNEL_CHAT_SETTINGS_UPDATE = "channel.chat_settings.update";
     public const string CHANNEL_CHAT_USER_MESSAGE_HOLD = "channel.chat.user_message_hold";
     public const string CHANNEL_CHAT_USER_MESSAGE_UPDATE = "channel.chat.user_message_update";
+    public const string CHANNEL_CUSTOM_POWER_UP_REDEMPTION_ADD = "channel.custom_power_up_redemption.add";
     public const string CHANNEL_SHARED_CHAT_BEGIN = "channel.shared_chat.begin";
     public const string CHANNEL_SHARED_CHAT_UPDATE = "channel.shared_chat.update";
     public const string CHANNEL_SHARED_CHAT_END = "channel.shared_chat.end";
