@@ -57,7 +57,7 @@ For more information on setting this up, please refer to [Twitch's Developer Doc
 
 ### Quick Start
 
-If you just want a reference to quickly get started, please see [`Example.cs`](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/blob/main/Example.cs) for an example implementation.
+If you just want a reference to quickly get started, please see [`Example.txt`](https://github.com/Jack-Pettigrew/Twitch-Integration-Library/blob/main/Example.txt) for an example implementation.
 
 ### Installing / Updating
 
