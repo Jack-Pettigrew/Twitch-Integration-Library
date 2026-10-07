@@ -46,6 +46,7 @@ class ChannelChatMessageEventSub : IEventSub
             UserId = twitchResponseJson["payload"]!["event"]!["chatter_user_id"]!.ToString(),
             UserName = twitchResponseJson["payload"]!["event"]!["chatter_user_name"]!.ToString(),
             Message = twitchResponseJson["payload"]!["event"]!["message"]!["text"]!.ToString(),
+            UserColor = twitchResponseJson["payload"]!["event"]!["color"]!.ToString(),
             IsReply = twitchResponseJson["payload"]!["event"]!.AsObject().ContainsKey("reply"),
             Badges = new Badges(twitchResponseJson["payload"]!["event"]!["badges"]!)
         };

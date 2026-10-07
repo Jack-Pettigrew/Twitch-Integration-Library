@@ -8,6 +8,7 @@ public class ChatMessage : EventArgs
     public string UserId { set; get; } = "";
     public string UserName { set; get; } = "";
     public string Message { set; get; } = "";
+    public string UserColor { set; get; } = "";
     public bool IsReply { set; get; } = false;
     public Badges Badges { set; get; } = new Badges();
 }
