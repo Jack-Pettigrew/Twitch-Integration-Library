@@ -1,6 +1,6 @@
-public class TwitchEventSubExistsException : System.Exception
+public class TwitchEventSubExistsException : Exception
 {
     public TwitchEventSubExistsException() { }
     public TwitchEventSubExistsException(string message) : base(message) { }
-    public TwitchEventSubExistsException(string message, System.Exception inner) : base(message, inner) { }
+    public TwitchEventSubExistsException(string message, Exception inner) : base(message, inner) { }
 }

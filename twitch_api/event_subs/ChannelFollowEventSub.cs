@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using TIL.Client;
 using TIL.Events;
@@ -10,9 +11,11 @@ namespace TIL.TwitchAPI.EventSubs;
 /// </summary>
 public partial class ChannelFollowEventSub : IEventSub
 {
-    public string GetScope()
+    public Scopes.Requirement GetScopeRequirement()
     {
-        return Scopes.MODERATOR_READ_FOLLOWERS;
+        return new(Scopes.Mode.All, [
+            Scopes.MODERATOR_READ_FOLLOWERS
+        ]);
     }
 
     public string GetSubscriptionType()
@@ -28,26 +31,21 @@ public partial class ChannelFollowEventSub : IEventSub
             version = "2",
             condition = new
             {
-                broadcaster_user_id = twitchSessionContext.user_id,
-                moderator_user_id = twitchSessionContext.user_id
+                broadcaster_user_id = twitchSessionContext.userId,
+                moderator_user_id = twitchSessionContext.userId
             },
             transport = new
             {
                 method = "websocket",
-                session_id = twitchSessionContext.session_id
+                session_id = twitchSessionContext.sessionId
             }
         };
     }
 
     public void ProcessEvent(JsonNode twitchResponseJson)
     {
-        ChannelFollow channelFollow = new ChannelFollow
-        {
-            UserId = twitchResponseJson["payload"]!["event"]!["user_id"]!.ToString(),
-            UserName = twitchResponseJson["payload"]!["event"]!["user_name"]!.ToString(),
-            FollowedAt = DateTime.Parse(twitchResponseJson["payload"]!["event"]!["user_name"]!.ToString())
-        };
+        ChannelFollow? channelFollow = JsonSerializer.Deserialize<ChannelFollow>(twitchResponseJson);
 
-        EventRegistry.TriggerChannelFollowReceived(channelFollow);
+        if (channelFollow is not null) EventRegistry.TriggerChannelFollowReceived(channelFollow);
     }
 }

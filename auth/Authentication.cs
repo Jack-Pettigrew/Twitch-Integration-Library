@@ -11,17 +11,14 @@ using TIL.DataContainers;
 using TIL.Exceptions;
 using TIL.Network.Responses;
 using TIL.Serialization;
+using TIL.TwitchAPI;
+using TIL.TwitchAPI.EventSubs;
 
 namespace TIL.Auth;
 
 static class Authentication
 {
-    private static HttpClient httpClient;
-
-    static Authentication()
-    {
-        httpClient = new HttpClient();
-    }
+    private static HttpClient httpClient = new();
 
     /// <summary>
     /// Requests Device Access Token from Twitch or attempts to use locally saved token.
@@ -31,49 +28,102 @@ static class Authentication
     /// <exception cref="FailedToDeserializeTokenException"></exception>
     /// <exception cref="InvalidAccessTokenException"></exception>
     /// <exception cref="HttpRequestException"></exception>
-    public static async Task<TwitchDeviceToken> GetDeviceAccessTokenAsync(TwitchSessionContext twitchSessionContext)
+    public static async Task<TwitchDeviceToken?> GetDeviceAccessTokenAsync(
+        TwitchSessionContext twitchSessionContext,
+        CancellationToken cancellationToken = default
+    )
     {
+        if (HasMissingScopes(twitchSessionContext, out IEventSub[] missingEventSubs))
+        {
+            throw new MissingScopesException(
+                "Missing scopes for the following EventSubs:\n" +
+                string.Join("\n", missingEventSubs.Select(e =>
+                {
+                    var requirement = e.GetScopeRequirement();
+
+                    var missingScopes = requirement.Scopes
+                        .Where(scope => !twitchSessionContext.scopes.Contains(scope));
+
+                    string separator = requirement.Mode switch
+                    {
+                        Scopes.Mode.All => " and ",
+                        Scopes.Mode.Any => " or ",
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+
+                    return $"- {e}: {string.Join(separator, missingScopes)}";
+                }))
+            );
+        }
+
         Console.WriteLine("Beginning Retrieving Device Token...");
 
-        Console.WriteLine("Searching for saved Device Token...");
-        TwitchDeviceToken? twitchDeviceToken = DeviceTokenSerializer.LoadDeviceToken();
+        TwitchDeviceToken? twitchDeviceToken = null;
+
+        try
+        {
+            Console.WriteLine("Searching for saved Device Token...");
+            twitchDeviceToken = DeviceTokenSerializer.LoadDeviceToken();
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            Console.WriteLine($"Permission denied loading device token: ${e.Message}");
+        }
+        catch (IOException e)
+        {
+            Console.WriteLine($"File system error loading device token: {e.Message}");
+        }
+        catch (JsonException e)
+        {
+            Console.WriteLine($"JSON serialization error loading device token: {e.Message}");
+        }
 
         // Attempt to validate and refresh device token
         if (twitchDeviceToken is not null)
         {
             Console.WriteLine("Checking saved Device Token...");
 
-            // Valid Check
-            if (!DetectNewScopesAdded(twitchSessionContext, twitchDeviceToken))
+            if (DetectNewScopesAdded(twitchSessionContext, twitchDeviceToken))
             {
-                if (DateTime.UtcNow >= twitchDeviceToken.ExpiresAtUtc && twitchDeviceToken.RefreshToken != string.Empty)
+                Console.WriteLine("New scopes have since been added - requesting a new Token...");
+            }
+            else
+            {
+                if (DateTimeOffset.UtcNow >= twitchDeviceToken.ExpiresAt)
                 {
-                    Console.WriteLine("Device Token Expired. Attempting to refresh...");
+                    Console.WriteLine("Device token has expired.");
+                }
+                else
+                {
+                    if (await ValidateToken(twitchDeviceToken.AccessToken, cancellationToken))
+                    {
+                        Console.WriteLine("Saved Device Token is valid.");
+                        return twitchDeviceToken;
+                    }
+
+                    Console.WriteLine("Saved Device Token is invalid or revoked.");
+                }
+
+                if (!string.IsNullOrEmpty(twitchDeviceToken.RefreshToken))
+                {
+                    Console.WriteLine("Attempting to refresh Device Token...");
 
                     try
                     {
-                        // Refresh Token
-                        twitchDeviceToken = await RefreshDeviceToken(twitchSessionContext.client_id!, twitchDeviceToken.RefreshToken);
+                        twitchDeviceToken = await RefreshDeviceToken
+                        (
+                            twitchSessionContext.clientId,
+                            twitchDeviceToken.RefreshToken,
+                            cancellationToken
+                        );
+
                         return twitchDeviceToken;
                     }
                     catch (Exception e)
                     {
-                        // Let it go into to device auth flow
-                        Console.WriteLine(e.Message);
+                        Console.WriteLine($"Token refresh failed: {e.Message}");
                     }
                 }
-                else
-                {
-                    // TODO final check with Twitch if token is valid (could have been revoked)
-
-                    Console.WriteLine("Saved Device Token is valid.");
-                    Console.WriteLine($"Using device token: {twitchDeviceToken}");
-                    return twitchDeviceToken;
-                }
-            }
-            else
-            {
-                Console.WriteLine("New scopes have since been added - requesting a new Token...");
             }
         }
         else
@@ -83,17 +133,19 @@ static class Authentication
 
         httpClient = new HttpClient();
 
-        FormUrlEncodedContent postData = new FormUrlEncodedContent(new Dictionary<string, string>
+        FormUrlEncodedContent postData = new(new Dictionary<string, string>
         {
-            ["client_id"] = twitchSessionContext.client_id!,
-            ["scopes"] = string.Join(" ", twitchSessionContext.scopes!.Select(e => e.GetScope()))
+            ["client_id"] = twitchSessionContext.clientId!,
+            ["scopes"] = string.Join(" ", twitchSessionContext.scopes)
         });
 
         Console.WriteLine("Requesting new Device Flow Auth...");
 
-        using HttpResponseMessage response = await httpClient.PostAsync(new Uri("https://id.twitch.tv/oauth2/device"), postData);
+        using HttpResponseMessage response = await httpClient.PostAsync(
+            new Uri("https://id.twitch.tv/oauth2/device"), postData, cancellationToken
+        );
 
-        string responseJson = await response.Content.ReadAsStringAsync();
+        string responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
 
         // Guard no success - exception exit early
         response.EnsureSuccessStatusCode();
@@ -101,44 +153,31 @@ static class Authentication
         DeviceCodeRequestResponse deviceResponse = JsonSerializer.Deserialize<DeviceCodeRequestResponse>(responseJson)!;
 
         // Open in browser
-        using Process browserProcess = new Process();
+        using Process browserProcess = new();
         browserProcess.StartInfo.UseShellExecute = true;
-        browserProcess.StartInfo.FileName = deviceResponse.verification_uri;
+        browserProcess.StartInfo.FileName = deviceResponse.VerificationUri;
         browserProcess.Start();
 
         Console.WriteLine("Polling device code for user completion...");
 
         // TODO handle exceptions
-        TokenSuccess tokenSuccess = await PollDeviceCodeFlowAsync(twitchSessionContext.client_id!, deviceResponse, CancellationToken.None);
+        twitchDeviceToken = await PollDeviceCodeFlowAsync(
+            twitchSessionContext.clientId!,
+            deviceResponse,
+            cancellationToken
+        );
 
-        if (tokenSuccess is null)
-        {
-            throw new FailedToDeserializeTokenException("");
-        }
-
-        DateTime tokenExpiry = DateTime.UtcNow.AddSeconds(tokenSuccess.expires_in);
-
-        if (tokenSuccess.access_token is null)
+        if (string.IsNullOrWhiteSpace(twitchDeviceToken.AccessToken))
         {
             throw new InvalidAccessTokenException("Device Flow Response is missing access_token.");
         }
 
-        if (tokenSuccess.refresh_token is null)
+        if (string.IsNullOrWhiteSpace(twitchDeviceToken.RefreshToken))
         {
-            Console.WriteLine($"Refresh successful but refresh token was not provided. User will need to reauth at: {tokenExpiry}");
+            Console.WriteLine($"Refresh successful but refresh token was not provided. User will need to reauth at: {twitchDeviceToken.ExpiresAt}");
         }
 
-        twitchDeviceToken = new TwitchDeviceToken
-        {
-            AccessToken = tokenSuccess.access_token,
-            RefreshToken = tokenSuccess.refresh_token ?? "",
-            ExpiresAtUtc = tokenExpiry,
-            Scopes = tokenSuccess.scope ?? Array.Empty<string>()
-        };
-
         DeviceTokenSerializer.SaveDeviceToken(twitchDeviceToken);
-
-        Cleanup();
 
         return twitchDeviceToken;
     }
@@ -146,63 +185,69 @@ static class Authentication
     /// <exception cref="FailedToDeserializeTokenException"></exception>
     /// <exception cref="InvalidAccessTokenException"></exception>
     /// <exception cref="InvalidOperationException">Device Token Polling failed.</exception>
-    private static async Task<TokenSuccess> PollDeviceCodeFlowAsync(string clientId, DeviceCodeRequestResponse deviceCodeResponse, CancellationToken cancellationToken)
+    private static async Task<TwitchDeviceToken> PollDeviceCodeFlowAsync(
+        string clientId, DeviceCodeRequestResponse
+        deviceCodeResponse,
+        CancellationToken cancellationToken
+    )
     {
-        if (deviceCodeResponse.device_code is null)
+        if (deviceCodeResponse.DeviceCode is null)
         {
             throw new ArgumentNullException("Device Code Response contains a null device_code.");
         }
 
         DateTime startedPollingAt = DateTime.UtcNow;
-        int pollingRateSeconds = deviceCodeResponse.interval;
+        int pollingRateSeconds = deviceCodeResponse.Interval;
 
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if ((DateTime.UtcNow - startedPollingAt).TotalSeconds >= deviceCodeResponse.expires_in)
+            if ((DateTime.UtcNow - startedPollingAt).TotalSeconds >= deviceCodeResponse.ExpiresIn)
             {
                 throw new DeviceCodeExpiredExceptionException("Device code expired (timed out). Start the device flow again.");
             }
 
-            using FormUrlEncodedContent postData = new FormUrlEncodedContent(new Dictionary<string, string>
+            using FormUrlEncodedContent postData = new(new Dictionary<string, string>
             {
                 ["client_id"] = clientId,
-                ["device_code"] = deviceCodeResponse.device_code,
+                ["device_code"] = deviceCodeResponse.DeviceCode,
                 ["grant_type"] = "urn:ietf:params:oauth:grant-type:device_code"
 
             });
 
-            using HttpResponseMessage pollingResponse = await httpClient.PostAsync("https://id.twitch.tv/oauth2/token", postData, cancellationToken);
+            using HttpResponseMessage pollingResponse = await httpClient.PostAsync(
+                "https://id.twitch.tv/oauth2/token", postData, cancellationToken
+            );
             string content = await pollingResponse.Content.ReadAsStringAsync(cancellationToken);
 
             // Handle successful response
             if (pollingResponse.IsSuccessStatusCode)
             {
-                TokenSuccess? authToken = JsonSerializer.Deserialize<TokenSuccess>(content);
+                TwitchDeviceToken? twitchDeviceToken = JsonSerializer.Deserialize<TwitchDeviceToken>(content);
 
-                if (authToken is null)
+                if (twitchDeviceToken is null)
                 {
                     throw new FailedToDeserializeTokenException("Unable to deserialize device code polling success response");
                 }
 
-                if (authToken.access_token is null)
+                if (twitchDeviceToken.AccessToken is null)
                 {
                     throw new InvalidAccessTokenException("Device Flow Response is missing access_token.");
                 }
 
-                return authToken;
+                return twitchDeviceToken;
             }
 
             // Handle failed response
-            TokenFailed? tokenFailed = JsonSerializer.Deserialize<TokenFailed>(content);
+            TwitchErrorResponse? tokenFailed = JsonSerializer.Deserialize<TwitchErrorResponse>(content);
 
             if (tokenFailed is null)
             {
                 throw new FailedToDeserializeTokenException("Unable to deserialize device code polling failure response.");
             }
 
-            switch (tokenFailed.message)
+            switch (tokenFailed.Message)
             {
                 case "authorization_pending":
                     break;
@@ -222,9 +267,13 @@ static class Authentication
     /// <exception cref="FailedToDeserializeTokenException"></exception>
     /// <exception cref="InvalidAccessTokenException"></exception>
     /// <exception cref="InvalidOperationException">Device Token Polling failed.</exception>
-    private static async Task<TwitchDeviceToken> RefreshDeviceToken(string clientId, string refreshToken)
+    public static async Task<TwitchDeviceToken> RefreshDeviceToken(
+        string clientId,
+        string refreshToken,
+        CancellationToken cancellationToken = default
+    )
     {
-        FormUrlEncodedContent postData = new FormUrlEncodedContent(new Dictionary<string, string>
+        FormUrlEncodedContent postData = new(new Dictionary<string, string>
         {
             ["client_id"] = clientId,
             ["client_secret"] = Env.CLIENT_SECRET,
@@ -232,64 +281,85 @@ static class Authentication
             ["refresh_token"] = refreshToken
         });
 
-        using HttpResponseMessage refreshResponse = await httpClient.PostAsync(new Uri("https://id.twitch.tv/oauth2/token"), postData);
-        string content = await refreshResponse.Content.ReadAsStringAsync();
+        using HttpResponseMessage refreshResponse = await httpClient.PostAsync(
+            new Uri("https://id.twitch.tv/oauth2/token"), postData, cancellationToken
+        );
+        string content = await refreshResponse.Content.ReadAsStringAsync(cancellationToken);
 
         if (refreshResponse.IsSuccessStatusCode)
         {
             Console.WriteLine("Refreshed Token Successfully");
 
-            TokenSuccess? tokenSuccess = JsonSerializer.Deserialize<TokenSuccess>(content);
+            TwitchDeviceToken? twitchDeviceToken = JsonSerializer.Deserialize<TwitchDeviceToken>(content);
 
-            if (tokenSuccess is null)
+            if (twitchDeviceToken is null)
             {
                 throw new FailedToDeserializeTokenException("");
             }
 
-            DateTime tokenExpiry = DateTime.UtcNow.AddSeconds(tokenSuccess.expires_in);
-
-            if (tokenSuccess.access_token is null)
+            if (twitchDeviceToken.AccessToken is null)
             {
                 throw new InvalidAccessTokenException("Device Flow Response is missing access_token.");
             }
 
-            if (tokenSuccess.refresh_token is null)
+            if (twitchDeviceToken.RefreshToken is null)
             {
-                Console.WriteLine($"Refresh successful but refresh token was not provided. User will need to reauth at: {tokenExpiry}");
+                Console.WriteLine($"Refresh successful but refresh token was not provided. User will need to reauth at: {twitchDeviceToken.ExpiresAt}");
             }
-
-            TwitchDeviceToken twitchDeviceToken = new TwitchDeviceToken
-            {
-                AccessToken = tokenSuccess.access_token,
-                RefreshToken = tokenSuccess.refresh_token ?? "",
-                ExpiresAtUtc = tokenExpiry,
-                Scopes = tokenSuccess.scope ?? Array.Empty<string>()
-            };
 
             DeviceTokenSerializer.SaveDeviceToken(twitchDeviceToken);
 
             return twitchDeviceToken;
         }
 
-        TokenFailed? tokenFailed = JsonSerializer.Deserialize<TokenFailed>(content)!;
+        TwitchErrorResponse? tokenFailed = JsonSerializer.Deserialize<TwitchErrorResponse>(content);
 
         if (tokenFailed is null)
         {
             throw new FailedToDeserializeTokenException("");
         }
 
-        throw new InvalidOperationException($"Device Flow polling failed: {(int)refreshResponse.StatusCode} {refreshResponse.ReasonPhrase}. Response: {tokenFailed.message}");
+        throw new InvalidOperationException($"Device Flow polling failed: {(int)refreshResponse.StatusCode} {refreshResponse.ReasonPhrase}. Response: {tokenFailed.Message}");
+    }
+
+    public static async Task<bool> ValidateToken(string accessToken, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            "https://id.twitch.tv/oauth2/validate"
+        );
+
+        request.Headers.Authorization = new("OAuth", accessToken);
+
+        using var response = await httpClient.SendAsync(request, cancellationToken);
+
+        return response.StatusCode == System.Net.HttpStatusCode.OK;
     }
 
     private static bool DetectNewScopesAdded(TwitchSessionContext twitchSessionContext, TwitchDeviceToken twitchDeviceToken)
     {
-        List<string> additionalScopes = new List<string>(twitchSessionContext.scopes.Select(x => x.GetScope()).Except(twitchDeviceToken.Scopes));
-
+        List<string> additionalScopes = new(twitchSessionContext.scopes.Except(twitchDeviceToken.Scopes));
         return additionalScopes.Count > 0;
     }
 
-    private static void Cleanup()
+    private static bool HasMissingScopes(TwitchSessionContext sessionContext, out IEventSub[] missingEventSubs)
     {
-        httpClient?.Dispose();
+        missingEventSubs = sessionContext.eventSubs.Where(e =>
+        {
+            Scopes.Requirement requirement = e.GetScopeRequirement();
+
+            var missing = requirement.Scopes
+                .Where(scope => !sessionContext.scopes.Contains(scope))
+                .ToArray();
+
+            return requirement.Mode switch
+            {
+                Scopes.Mode.All => missing.Length > 0,
+                Scopes.Mode.Any => missing.Length == requirement.Scopes.Length,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }).ToArray();
+
+        return missingEventSubs.Length > 0;
     }
 }

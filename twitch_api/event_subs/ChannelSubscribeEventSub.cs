@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using TIL.Client;
 using TIL.Events;
@@ -10,9 +11,9 @@ namespace TIL.TwitchAPI.EventSubs;
 /// </summary>
 public partial class ChannelSubscribeEventSub : IEventSub
 {
-    public string GetScope()
+    public Scopes.Requirement GetScopeRequirement()
     {
-        return Scopes.CHANNEL_READ_SUBSCRIPTIONS;
+        return new(Scopes.Mode.All, [Scopes.CHANNEL_READ_SUBSCRIPTIONS]);
     }
 
     public string GetSubscriptionType()
@@ -28,26 +29,22 @@ public partial class ChannelSubscribeEventSub : IEventSub
             version = "1",
             condition = new
             {
-                broadcaster_user_id = twitchSessionContext.user_id,
+                broadcaster_user_id = twitchSessionContext.userId,
             },
             transport = new
             {
                 method = "websocket",
-                session_id = twitchSessionContext.session_id
+                session_id = twitchSessionContext.sessionId
             }
         };
     }
 
     public void ProcessEvent(JsonNode twitchResponseJson)
     {
-        ChannelSubscribe channelSubscribe = new ChannelSubscribe
-        {
-            UserId = twitchResponseJson["payload"]!["event"]!["user_id"]!.ToString(),
-            UserName = twitchResponseJson["payload"]!["event"]!["user_name"]!.ToString(),
-            Tier = twitchResponseJson["payload"]!["event"]!["tier"]!.ToString(),
-            IsGift = (bool)twitchResponseJson["payload"]!["event"]!["is_gift"]!
-        };
+        ChannelSubscribe? channelSubscribe = JsonSerializer.Deserialize<ChannelSubscribe>(
+            twitchResponseJson["payload"]!["event"]
+        );
 
-        EventRegistry.TriggerChannelSubscribeReceived(channelSubscribe);
+        if (channelSubscribe is not null) EventRegistry.TriggerChannelSubscribeReceived(channelSubscribe);
     }
 }
