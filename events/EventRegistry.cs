@@ -1,4 +1,5 @@
 using System;
+using TIL.DataContainers;
 
 namespace TIL.Events;
 
@@ -13,29 +14,38 @@ public static class EventRegistry
     public static event TwitchEventHandler<ChannelSubscribeMessage>? ChannelSubscribeMessageReceived;
 
     // POLL
-    public static event TwitchEventHandler<PollBegin>? PollBeginReceived;
-    public static event TwitchEventHandler<PollProgress>? PollProgressReceived;
-    public static event TwitchEventHandler<PollEnd>? PollEndReceived;
+    public static event TwitchEventHandler<Poll>? PollBeginReceived;
+    public static event TwitchEventHandler<Poll>? PollProgressReceived;
+    public static event TwitchEventHandler<Poll>? PollEndReceived;
 
     // REWARDS
-    public static event TwitchEventHandler<ChannelPointsAutomaticRewardRedemption>? ChannelPointsAutomaticRewardRedemptionReceived;
+    public static event TwitchEventHandler<ChannelPointsAutomaticRewardRedemption>? ChannelPointsAutomaticRewardRedemptionAddReceived;
     public static event TwitchEventHandler<ChannelPointsCustomRewardRedemption>? ChannelPointsCustomRewardRedemptionReceived;
+    public static event TwitchEventHandler<ChannelPointsCustomReward>? ChannelPointsCustomRewardAdd;
+    public static event TwitchEventHandler<ChannelPointsCustomReward>? ChannelPointsCustomRewardUpdate;
+    public static event TwitchEventHandler<ChannelPointsCustomReward>? ChannelPointsCustomRewardRemove;
 
     // POWER UPS
-    public static event TwitchEventHandler<ChannelCustomPowerUpRedemptionAdd>? ChannelCustomPowerUpRedemptionAddReceived;
+    public static event TwitchEventHandler<ChannelCustomPowerUpRedemption>? ChannelCustomPowerUpRedemptionAddReceived;
 
     // BITS
     public static event TwitchEventHandler<BitsUse>? BitsUseReceived;
 
     // GOAL
-    public static event TwitchEventHandler<GoalBegin>? GoalBeginReceived;
-    public static event TwitchEventHandler<GoalProgress>? GoalProgressReceived;
-    public static event TwitchEventHandler<GoalEnd>? GoalEndReceived;
+    public static event TwitchEventHandler<Goal>? GoalBeginReceived;
+    public static event TwitchEventHandler<Goal>? GoalProgressReceived;
+    public static event TwitchEventHandler<Goal>? GoalEndReceived;
 
     // HYPE TRAIN
-    public static event TwitchEventHandler<HypeTrainBegin>? HypeTrainBeginReceived;
-    public static event TwitchEventHandler<HypeTrainProgress>? HypeTrainProgressReceived;
-    public static event TwitchEventHandler<HypeTrainEnd>? HypeTrainEndReceived;
+    public static event TwitchEventHandler<HypeTrain>? HypeTrainBeginReceived;
+    public static event TwitchEventHandler<HypeTrain>? HypeTrainProgressReceived;
+    public static event TwitchEventHandler<HypeTrain>? HypeTrainEndReceived;
+
+    // PREDICTION
+    public static event TwitchEventHandler<Prediction>? PredictionBeginReceived;
+    public static event TwitchEventHandler<Prediction>? PredictionProgressReceived;
+    public static event TwitchEventHandler<Prediction>? PredictionLockReceived;
+    public static event TwitchEventHandler<Prediction>? PredictionEndRecieved;
 
     public static void TriggerChatMessageReceived(ChatMessage chatMessage)
     {
@@ -57,24 +67,24 @@ public static class EventRegistry
         ChannelSubscribeMessageReceived?.Invoke(channelSubscribeMessage);
     }
 
-    public static void TriggerPollBeginReceived(PollBegin pollBegin)
+    public static void TriggerPollBeginReceived(Poll poll)
     {
-        PollBeginReceived?.Invoke(pollBegin);
+        PollBeginReceived?.Invoke(poll);
     }
 
-    public static void TriggerPollProgressReceived(PollProgress pollProgress)
+    public static void TriggerPollProgressReceived(Poll poll)
     {
-        PollProgressReceived?.Invoke(pollProgress);
+        PollProgressReceived?.Invoke(poll);
     }
 
-    public static void TriggerPollEndReceived(PollEnd pollEnd)
+    public static void TriggerPollEndReceived(Poll poll)
     {
-        PollEndReceived?.Invoke(pollEnd);
+        PollEndReceived?.Invoke(poll);
     }
 
-    public static void TriggerChannelPointsAutomaticRewardRedemptionReceived(ChannelPointsAutomaticRewardRedemption channelPointsAutomaticRewardRedemption)
+    public static void TriggerChannelPointsAutomaticRewardRedemptionAddReceived(ChannelPointsAutomaticRewardRedemption rewardRedemptionAdd)
     {
-        ChannelPointsAutomaticRewardRedemptionReceived?.Invoke(channelPointsAutomaticRewardRedemption);
+        ChannelPointsAutomaticRewardRedemptionAddReceived?.Invoke(rewardRedemptionAdd);
     }
 
     public static void TriggerChannelPointsCustomRewardRedemptionReceived(ChannelPointsCustomRewardRedemption channelPointsCustomRewardRedemption)
@@ -82,43 +92,78 @@ public static class EventRegistry
         ChannelPointsCustomRewardRedemptionReceived?.Invoke(channelPointsCustomRewardRedemption);
     }
 
+    public static void TriggerChannelPointsCustomRewardAddRecieved(ChannelPointsCustomReward customReward)
+    {
+        ChannelPointsCustomRewardAdd?.Invoke(customReward);
+    }
+
+    public static void TriggerChannelPointsCustomRewardUpdateRecieved(ChannelPointsCustomReward customReward)
+    {
+        ChannelPointsCustomRewardUpdate?.Invoke(customReward);
+    }
+
+    public static void TriggerChannelPointsCustomRewardRemoveRecieved(ChannelPointsCustomReward customReward)
+    {
+        ChannelPointsCustomRewardRemove?.Invoke(customReward);
+    }
+
     public static void TriggerBitsUseReceived(BitsUse bitsUse)
     {
         BitsUseReceived?.Invoke(bitsUse);
     }
 
-    public static void TriggersGoalBeginReceived(GoalBegin goalBegin)
+    public static void TriggerGoalBeginReceived(Goal goal)
     {
-        GoalBeginReceived?.Invoke(goalBegin);
+        GoalBeginReceived?.Invoke(goal);
     }
 
-    public static void TriggerGoalProgressReceived(GoalProgress goalProgress)
+    public static void TriggerGoalProgressReceived(Goal goal)
     {
-        GoalProgressReceived?.Invoke(goalProgress);
+        GoalProgressReceived?.Invoke(goal);
     }
 
-    public static void TriggerGoalEndReceived(GoalEnd goalEnd)
+    public static void TriggerGoalEndReceived(Goal goal)
     {
-        GoalEndReceived?.Invoke(goalEnd);
+        GoalEndReceived?.Invoke(goal);
     }
 
-    public static void TriggerHypeTrainBeginReceived(HypeTrainBegin hypeTrainBegin)
+    public static void TriggerHypeTrainBeginReceived(HypeTrain hypeTrain)
     {
-        HypeTrainBeginReceived?.Invoke(hypeTrainBegin);
+        HypeTrainBeginReceived?.Invoke(hypeTrain);
     }
 
-    public static void TriggerHypeTrainProgressReceived(HypeTrainProgress hypeTrainProgress)
+    public static void TriggerHypeTrainProgressReceived(HypeTrain hypeTrain)
     {
-        HypeTrainProgressReceived?.Invoke(hypeTrainProgress);
+        HypeTrainProgressReceived?.Invoke(hypeTrain);
     }
 
-    public static void TriggerHypeTrainEndReceived(HypeTrainEnd hypeTrainEnd)
+    public static void TriggerHypeTrainEndReceived(HypeTrain hypeTrain)
     {
-        HypeTrainEndReceived?.Invoke(hypeTrainEnd);
+        HypeTrainEndReceived?.Invoke(hypeTrain);
     }
 
-    public static void TriggerChannelCustomPowerUpRedemptionAddReceived(ChannelCustomPowerUpRedemptionAdd channelCustomPowerUpRedemptionAdd)
+    public static void TriggerChannelCustomPowerUpRedemptionAddReceived(ChannelCustomPowerUpRedemption channelCustomPowerUpRedemption)
     {
-        ChannelCustomPowerUpRedemptionAddReceived?.Invoke(channelCustomPowerUpRedemptionAdd);
+        ChannelCustomPowerUpRedemptionAddReceived?.Invoke(channelCustomPowerUpRedemption);
+    }
+
+    public static void TriggerPredictionBegin(Prediction prediction)
+    {
+        PredictionBeginReceived?.Invoke(prediction);
+    }
+
+    public static void TriggerPredictionProgress(Prediction prediction)
+    {
+        PredictionProgressReceived?.Invoke(prediction);
+    }
+
+    public static void TriggerPredictionLock(Prediction prediction)
+    {
+        PredictionLockReceived?.Invoke(prediction);
+    }
+
+    public static void TriggerPredictionEnd(Prediction prediction)
+    {
+        PredictionEndRecieved?.Invoke(prediction);
     }
 }

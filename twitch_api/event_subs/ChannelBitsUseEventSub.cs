@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using TIL.Client;
 using TIL.Events;
@@ -10,9 +11,11 @@ namespace TIL.TwitchAPI.EventSubs;
 /// </summary>
 public partial class ChannelBitsUseEventSub : IEventSub
 {
-    public string GetScope()
+    public Scopes.Requirement GetScopeRequirement()
     {
-        return Scopes.CHANNEL_BITS_READ;
+        return new(Scopes.Mode.All, [
+            Scopes.CHANNEL_BITS_READ
+        ]);
     }
 
     public string GetSubscriptionType()
@@ -28,27 +31,20 @@ public partial class ChannelBitsUseEventSub : IEventSub
             version = "1",
             condition = new
             {
-                broadcaster_user_id = twitchSessionContext.user_id,
+                broadcaster_user_id = twitchSessionContext.userId,
             },
             transport = new
             {
                 method = "websocket",
-                session_id = twitchSessionContext.session_id
+                session_id = twitchSessionContext.sessionId
             }
         };
     }
 
     public void ProcessEvent(JsonNode twitchResponseJson)
     {
-        BitsUse bitsUse = new BitsUse
-        {
-            UserId = twitchResponseJson["payload"]!["event"]!["user_id"]!.ToString(),
-            UserName = twitchResponseJson["payload"]!["event"]!["user_name"]!.ToString(),
-            Bits = (int)twitchResponseJson["payload"]!["event"]!["bits"]!,
-            Type = twitchResponseJson["payload"]!["event"]!["type"]!.ToString(),
-            Message = twitchResponseJson["payload"]!["event"]!["message"]!["text"]!.ToString()
-        };
+        BitsUse? bitsUse = JsonSerializer.Deserialize<BitsUse>(twitchResponseJson["payload"]!["event"]);
 
-        EventRegistry.TriggerBitsUseReceived(bitsUse);
+        if (bitsUse is not null) EventRegistry.TriggerBitsUseReceived(bitsUse);
     }
 }

@@ -5,7 +5,7 @@ namespace TIL.TwitchAPI.EventSubs;
 
 public interface IEventSub
 {
-    string GetScope();
+    Scopes.Requirement GetScopeRequirement();
     string GetSubscriptionType();
     object ToSubscriptionPayload(TwitchSessionContext twitchSessionContext);
     void ProcessEvent(JsonNode twitchResponseJson);

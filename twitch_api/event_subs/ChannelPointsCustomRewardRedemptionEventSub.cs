@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using TIL.Client;
 using TIL.Events;
@@ -10,9 +11,12 @@ namespace TIL.TwitchAPI.EventSubs;
 /// </summary>
 public partial class ChannelPointsCustomRewardRedemptionEventSub : IEventSub
 {
-    public string GetScope()
+    public Scopes.Requirement GetScopeRequirement()
     {
-        return Scopes.CHANNEL_READ_REDEMPTIONS;
+        return new(Scopes.Mode.Any, [
+            Scopes.CHANNEL_READ_REDEMPTIONS,
+            Scopes.CHANNEL_MANAGE_REDEMPTIONS
+        ]);
     }
 
     public string GetSubscriptionType()
@@ -28,30 +32,23 @@ public partial class ChannelPointsCustomRewardRedemptionEventSub : IEventSub
             version = "1",
             condition = new
             {
-                broadcaster_user_id = twitchSessionContext.user_id,
+                broadcaster_user_id = twitchSessionContext.userId,
             },
             transport = new
             {
                 method = "websocket",
-                session_id = twitchSessionContext.session_id
+                session_id = twitchSessionContext.sessionId
             }
         };
     }
 
     public void ProcessEvent(JsonNode twitchResponseJson)
     {
-        ChannelPointsCustomRewardRedemption channelPointsCustomRewardRedemptionReceived = new ChannelPointsCustomRewardRedemption
-        {
-            UserId = twitchResponseJson["payload"]!["event"]!["user_id"]!.ToString(),
-            UserName = twitchResponseJson["payload"]!["event"]!["user_name"]!.ToString(),
-            UserInput = twitchResponseJson["payload"]!["event"]!["user_input"]!.ToString(),
-            Status = twitchResponseJson["payload"]!["event"]!["status"]!.ToString(),
-            Title = twitchResponseJson["payload"]!["event"]!["reward"]!["title"]!.ToString(),
-            Cost = (int)twitchResponseJson["payload"]!["event"]!["reward"]!["cost"]!,
-            RewardPrompt = twitchResponseJson["payload"]!["event"]!["reward"]!["prompt"]!.ToString(),
-            RedeemedAt = DateTime.Parse(twitchResponseJson["payload"]!["event"]!["redeemed_at"]!.ToString())
-        };
+        var rewardRedemption = JsonSerializer.Deserialize<ChannelPointsCustomRewardRedemption>(
+            twitchResponseJson["payload"]!["event"]
+        );
 
-        EventRegistry.TriggerChannelPointsCustomRewardRedemptionReceived(channelPointsCustomRewardRedemptionReceived);
+        if (rewardRedemption is not null)
+            EventRegistry.TriggerChannelPointsCustomRewardRedemptionReceived(rewardRedemption);
     }
 }

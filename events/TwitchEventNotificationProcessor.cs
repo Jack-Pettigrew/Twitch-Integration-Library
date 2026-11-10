@@ -31,7 +31,15 @@ public static class TwitchEventNotificationProcessor
 
     public static void ProcessTwitchEvent(JsonNode twitchResponseJson)
     {
-        if (processorDictionary.TryGetValue(twitchResponseJson["payload"]!["subscription"]!["type"]!.ToString(), out IEventSub? eventSub))
+        string? subscriptionType = twitchResponseJson["payload"]?["subscription"]?["type"]?.ToString();
+
+        if (subscriptionType is null)
+        {
+            Console.WriteLine($"Missing subscription type in notification payload.");
+            return;
+        }
+
+        if (processorDictionary.TryGetValue(subscriptionType, out IEventSub? eventSub))
         {
             eventSub.ProcessEvent(twitchResponseJson);
         }

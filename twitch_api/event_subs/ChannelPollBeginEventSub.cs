@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using TIL.Client;
 using TIL.Events;
@@ -11,9 +12,12 @@ namespace TIL.TwitchAPI.EventSubs;
 /// </summary>
 public partial class ChannelPollBeginEventSub : IEventSub
 {
-    public string GetScope()
+    public Scopes.Requirement GetScopeRequirement()
     {
-        return Scopes.CHANNEL_READ_POLLS;
+        return new(Scopes.Mode.Any, [
+            Scopes.CHANNEL_READ_POLLS,
+            Scopes.CHANNEL_MANAGE_POLLS
+        ]);
     }
 
     public string GetSubscriptionType()
@@ -29,30 +33,20 @@ public partial class ChannelPollBeginEventSub : IEventSub
             version = "1",
             condition = new
             {
-                broadcaster_user_id = twitchSessionContext.user_id,
+                broadcaster_user_id = twitchSessionContext.userId,
             },
             transport = new
             {
                 method = "websocket",
-                session_id = twitchSessionContext.session_id
+                session_id = twitchSessionContext.sessionId
             }
         };
     }
 
     public void ProcessEvent(JsonNode twitchResponseJson)
     {
-        PollBegin pollBegin = new PollBegin
-        {
-            Title = twitchResponseJson["payload"]!["event"]!["title"]!.ToString(),
-            Choices = twitchResponseJson["payload"]!["event"]!["choices"]!.AsArray().Select(x => x!.AsObject()),
-            BitsVotingEnabled = (bool)twitchResponseJson["payload"]!["event"]!["bits_voting"]!["is_enabled"]!,
-            BitsVotingAmount = (int)twitchResponseJson["payload"]!["event"]!["bits_voting"]!["amount_per_vote"]!,
-            ChannelPointsVotingEnabled = (bool)twitchResponseJson["payload"]!["event"]!["channel_points_voting"]!["is_enabled"]!,
-            ChannelPointsVotingAmount = (int)twitchResponseJson["payload"]!["event"]!["channel_points_voting"]!["amount_per_vote"]!,
-            StartedAt = DateTime.Parse(twitchResponseJson["payload"]!["event"]!["channel_points_voting"]!["amount_per_vote"]!.ToString()),
-            EndsAt = DateTime.Parse(twitchResponseJson["payload"]!["event"]!["channel_points_voting"]!["amount_per_vote"]!.ToString())
-        };
+        Poll? poll = JsonSerializer.Deserialize<Poll>(twitchResponseJson["payload"]!["event"]);
 
-        EventRegistry.TriggerPollBeginReceived(pollBegin);
+        if (poll is not null) EventRegistry.TriggerPollBeginReceived(poll);
     }
 }

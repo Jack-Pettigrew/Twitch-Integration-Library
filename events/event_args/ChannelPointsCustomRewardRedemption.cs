@@ -1,15 +1,43 @@
-using System;
+using System.Text.Json.Serialization;
+using TIL.DataContainers;
 
 namespace TIL.Events;
 
 public class ChannelPointsCustomRewardRedemption : EventArgs
 {
-    public string UserId { init; get; } = "";
-    public string UserName { init; get; } = "";
-    public string UserInput { init; get; } = "";
-    public string Status { init; get; } = "";
-    public string Title { init; get; } = "";
-    public int Cost { init; get; } = 0;
-    public string RewardPrompt { init; get; } = "";
-    public DateTime RedeemedAt { init; get; } = DateTime.Now;
+    [JsonPropertyName("id")]
+    public string Id { get; init; } = "";
+
+    [JsonPropertyName("broadcaster_user_id")]
+    public string BroadcasterUserId { get; init; } = "";
+
+    [JsonPropertyName("broadcaster_user_login")]
+    public string BroadcasterUserLogin { get; init; } = "";
+
+    [JsonPropertyName("broadcaster_user_name")]
+    public string BroadcasterUserName { get; init; } = "";
+
+    [JsonPropertyName("user_id")]
+    public string UserId { get; init; } = "";
+
+    [JsonPropertyName("user_login")]
+    public string UserLogin { get; init; } = "";
+
+    [JsonPropertyName("user_name")]
+    public string UserName { get; init; } = "";
+
+    [JsonPropertyName("user_input")]
+    public string UserInput { get; init; } = "";
+
+    [JsonPropertyName("status")]
+    public string RawStatus { get; init; } = "";
+
+    [JsonIgnore]
+    public Reward.Status Status => Reward.ParseStatus(RawStatus);
+
+    [JsonPropertyName("reward")]
+    public Reward? Reward { get; init; } = null;
+
+    [JsonPropertyName("redeemed_at")]
+    public DateTimeOffset? RedeemedAt { get; init; } = null;
 }

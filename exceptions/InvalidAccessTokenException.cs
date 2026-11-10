@@ -1,8 +1,8 @@
 namespace TIL.Exceptions;
 
-public class InvalidAccessTokenException : System.Exception
+public class InvalidAccessTokenException : Exception
 {
     public InvalidAccessTokenException() { }
     public InvalidAccessTokenException(string message) : base(message) { }
-    public InvalidAccessTokenException(string message, System.Exception inner) : base(message, inner) { }
+    public InvalidAccessTokenException(string message, Exception inner) : base(message, inner) { }
 }

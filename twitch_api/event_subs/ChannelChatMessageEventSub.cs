@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using TIL.Client;
 using TIL.Events;
@@ -9,9 +10,11 @@ namespace TIL.TwitchAPI.EventSubs;
 /// </summary>
 class ChannelChatMessageEventSub : IEventSub
 {
-    public string GetScope()
+    public Scopes.Requirement GetScopeRequirement()
     {
-        return Scopes.USER_READ_CHAT;
+        return new(Scopes.Mode.All, [
+            Scopes.USER_READ_CHAT
+        ]);
     }
 
     public string GetSubscriptionType()
@@ -27,30 +30,21 @@ class ChannelChatMessageEventSub : IEventSub
             version = "1",
             condition = new
             {
-                broadcaster_user_id = twitchSessionContext.user_id,
-                user_id = twitchSessionContext.user_id
+                broadcaster_user_id = twitchSessionContext.userId,
+                user_id = twitchSessionContext.userId
             },
             transport = new
             {
                 method = "websocket",
-                session_id = twitchSessionContext.session_id
+                session_id = twitchSessionContext.sessionId
             }
         };
     }
 
     public void ProcessEvent(JsonNode twitchResponseJson)
     {
-        ChatMessage chatMessage = new ChatMessage
-        {
-            MessageId = twitchResponseJson["payload"]!["event"]!["message_id"]!.ToString(),
-            UserId = twitchResponseJson["payload"]!["event"]!["chatter_user_id"]!.ToString(),
-            UserName = twitchResponseJson["payload"]!["event"]!["chatter_user_name"]!.ToString(),
-            Message = twitchResponseJson["payload"]!["event"]!["message"]!["text"]!.ToString(),
-            UserColor = twitchResponseJson["payload"]!["event"]!["color"]!.ToString(),
-            IsReply = twitchResponseJson["payload"]!["event"]!.AsObject().ContainsKey("reply"),
-            Badges = new Badges(twitchResponseJson["payload"]!["event"]!["badges"]!)
-        };
+        ChatMessage? chatMessage = JsonSerializer.Deserialize<ChatMessage>(twitchResponseJson["payload"]!["event"]);
 
-        EventRegistry.TriggerChatMessageReceived(chatMessage);
+        if (chatMessage is not null) EventRegistry.TriggerChatMessageReceived(chatMessage);
     }
 }

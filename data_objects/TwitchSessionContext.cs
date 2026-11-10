@@ -5,9 +5,10 @@ namespace TIL.Client;
 
 public class TwitchSessionContext
 {
-    public string? client_id;
-    public string? user_id;
-    public string? session_id;
-    public IEventSub[]? scopes;
-    public TwitchDeviceToken? twitch_device_token;
+    public string clientId = "";
+    public string userId = "";
+    public string sessionId = "";
+    public string[] scopes = [];
+    public IEventSub[] eventSubs = [];
+    public TwitchDeviceToken? twitchDeviceToken;
 }
